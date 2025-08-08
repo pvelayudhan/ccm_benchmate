@@ -7,8 +7,8 @@ from ccm_benchmate.apis.stringdb import StringDb
 from ccm_benchmate.apis.rnacentral import RnaCentral
 from ccm_benchmate.apis.others import BioGrid, IntAct
 
-from ccm_benchmate.sequence.sequence import Sequence, SequenceList, SequenceDict
-from ccm_benchmate.structure.structure import Structure, Complex
+#from ccm_benchmate.sequence.sequence import Sequence, SequenceList, SequenceDict
+#from ccm_benchmate.structure.structure import Structure, Complex
 from ccm_benchmate.genome.genome import Genome
 from ccm_benchmate.literature.literature import Paper, LitSearch
 
@@ -30,8 +30,27 @@ class Apis:
         self.rnacentral = RnaCentral()
         self.intact = IntAct()
 
-    def api_call(self, kb=None, to_kb=True, **kwargs):
-        pass
+    def api_call(self, target: str, method: str, *args, **kwargs):
+        """
+        Call a specific method from a specific aggregated class.
+        Example: obj.api_call("classA", "method1", arg1, arg2, kw=value)
+        """
+        # Ensure the target exists
+        if not hasattr(self, target):
+            raise ValueError(f"No such subobject: {target}")
+
+        subobj = getattr(self, target)
+
+        # Ensure the method exists
+        if not hasattr(subobj, method):
+            raise AttributeError(f"{target} has no method {method}")
+
+        func = getattr(subobj, method)
+        if not callable(func):
+            raise TypeError(f"{method} on {target} is not callable")
+
+        # Call it
+        return func(*args, **kwargs)
 
 
 class Project:
@@ -40,11 +59,13 @@ class Project:
     """
     def __init__(self, description):
         self.description = description
+        #this is very impcomplete, I will
+        self.kb = KnowledgeBase()
         self.apis = Apis()
-        self.genome = Genome()
-        self.structures=None
-        self.sequences=None
-        self.papers=None
+        self.genome = None
+        self.structures=[]
+        self.sequences=[]
+        self.papers=[]
 
 
     def _kb_create(self, engine):
@@ -54,16 +75,47 @@ class Project:
         pass
 
     #TODO this will do a lit search using the lit search class and then return papers will need to find a way to get them in the knowledge base
-    def literature_search(self):
+    def literature_search(self, query, database="pubmed", results="id", max_results=1000):
+        litsearch = LitSearch()
+        ids=litsearch.search(query, database=database, results=results, max_results=max_results)
+        return ids
+
+    def collect_papers(self, ids_types, **kwargs):
+        """
+
+        :param ids_types: these are the id and type of the paper to collect
+        :param kwargs: see ccm_benchmate.literature.paper.Paper for kwargs
+        :return:self, these will have the processed papers in memory
+        """
+        paper_list=[]
+        for id, type in ids_types:
+            paper=Paper(id, **kwargs)
+            paper_list.append(paper)
+        self.papers=self.papers+paper_list
+        return self
+
+    def add_papers(self):
+        pass
+
+    def add_genome(self, genome_fasta, gtf, name, description, db_conn=self.kb.engine,
+                   transcrcriptome_fasta=None, proteome_fasta=None, create=True,):
+        self.genome=Genome(genome_fasta, gtf, name, description, db_conn,
+                           transcrcriptome_fasta, proteome_fasta, create=create,)
+        return self
+
+    def upload_papers(self):
+        pass
+
+
+    #TODO
+    def sequences(self):
         pass
 
     #TODO
-    def get_sequences(self):
+    def structures(self):
         pass
 
-    #TODO
-    def get_structures(self):
-        pass
+
 
 
 
