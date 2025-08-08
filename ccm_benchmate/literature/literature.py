@@ -58,8 +58,8 @@ class LitSearch:
 
 
 class Paper:
-    def __init__(self, paper_id, id_type="pubmed", search_openalex=True, citations=True,
-                 references=True, related_works=True):
+    def __init__(self, paper_id, id_type="pubmed", search_info=True, citations=True,
+                 references=True, related_works=True, download=True, destination=".", process=True, **process_kwargs):
         """
         This class is used to download and process a paper from a given id, it can also be used to process a paper from a file
         :param paper_id:
@@ -82,11 +82,11 @@ class Paper:
         self.chunk_embeddings = None
         self.abstract = self.get_abstract()
         self.abstract_embeddings = None
-        if search_openalex:
-            self.paper_info = search_openalex(id_type=self.id_type, paper_id=self.id, cited_by=citations,
+        if search_info:
+            self.paper_info = search_openalex(id_type=self.id_type, paper_id=self.paper_id, cited_by=citations,
                                               references=references, related_works=related_works)
             if self.paper_info is None:
-                raise NoPapersError("Could not find a paper with id {}".format(self.id))
+                raise NoPapersError("Could not find a paper with id {}".format(self.paper_id))
 
             if "best_oa_location" in self.paper_info.keys() and self.paper_info["best_oa_location"] is not None:
                 link = self.paper_info["best_oa_location"]["pdf_url"]
@@ -98,7 +98,15 @@ class Paper:
             else:
                 warnings.warn("There is no place to download the paper, this paper might not be open access")
                 self.download_link = None
-
+        if download and self.download_link is not None:
+            try:
+                self.download(destination)
+                self.downloaded=True
+            except:
+                self.downloaded=False
+                warnings.warn("Could not download paper")
+        if process and self.downloaded:
+            self.process(self.file_path, **process_kwargs)
 
     def get_abstract(self):
         abstract_text=None
@@ -123,12 +131,15 @@ class Paper:
     def download(self, destination):
         download = requests.get(self.download_link, stream=True)
         download.raise_for_status()
-        with open("{}/{}.pdf".format(destination, self.id), "wb") as f:
+        with open("{}/{}.pdf".format(destination, self.paper_id), "wb") as f:
             f.write(download.content)
-        file_paths=os.path.abspath(os.path.join("{}/{}.pdf".format(destination, self.id)))
-        return file_paths
+        file_paths=os.path.abspath(os.path.join("{}/{}.pdf".format(destination, self.paper_id)))
+        self.file_path=file_paths
+        return self
 
-    def process(self, file_path, embed_images=True, embed_text=True, embed_interpretations=True, **kwargs):
+    #TODO I need to pass arguments properly the **kwargs is not going to work
+    def process(self, file_path, embed_images=True, embed_text=True,
+                embed_interpretations=True, **kwargs):
         """
         see utils.py for details
         :return:
@@ -144,12 +155,12 @@ class Paper:
             if len(self.figrues) > 0:
                 figure_embeddings=[]
                 for fig in self.figures:
-                    figure_embeddings.append(image_embeddings(fig, **kwargs))
+                    figure_embeddings.append(image_embeddings(fig))
 
             if len(self.tables) > 0:
                 table_embeddings=[]
                 for table in self.tables:
-                    table_embeddings.append(embed_images, table, **kwargs)
+                    table_embeddings.append(embed_images, table)
 
         if embed_text:
             self.abstract_embeddings=text_embeddings(self.abstract, splitting_stratety="none")[1]
@@ -157,14 +168,16 @@ class Paper:
                 self.text_chunks, self.chunk_embeddings=text_embeddings(self.text,
                                                                         splitting_stratety="semantic",
                                                                         **kwargs)
-
+        if embed_interpretations:
             if self.figure_interpretation is not None:
                 self.figure_interpretation_embeddings=text_embeddings(self.figure_interpretation,
-                                                                      splitting_strategy="none")[1]
+                                                                      splitting_strategy="none",
+                                                                      **kwargs)[1]
 
             if self.table_interpretation is not None:
                 self.table_interpretation_embeddings=text_embeddings(self.table_interpretation,
-                                                                      splitting_strategy="none")[1]
+                                                                      splitting_strategy="none",
+                                                                     **kwargs)[1]
 
         return self
 

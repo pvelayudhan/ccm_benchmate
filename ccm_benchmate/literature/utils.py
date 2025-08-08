@@ -128,8 +128,9 @@ def process_pdf(pdf, lp_model=paper_processing_config["lp_model"], interpret_fig
 
     return article_text, figures, tables, figure_interpretation, table_interpretation
 
-
-def image_embeddings(images, model_dir=paper_processing_config["image_embedding_model"], device="cuda:0"):
+#TODO this is not model agnostic we are relying on colpali it's ok for now but will need to be changed
+def image_embeddings(images, model_dir=paper_processing_config["image_embedding_model"],
+                     device="cuda:0"):
 
     model = ColPali.from_pretrained(
         model_dir,
@@ -304,7 +305,7 @@ def search_openalex(id_type, paper_id, fields=None, cited_by=False, references=F
 
     return new_response
 
-# its here, not sure if I will use it
+# its here, not sure if I will use it, still waiting for an api key, feel like not gonna happen
 def search_semantic_scholar(paper_id, id_type, api_key=None, fields=None):
     base_url="https://api.semanticscholar.org/graph/v1/paper/{}?fields={}"
     if id_type == "doi":
