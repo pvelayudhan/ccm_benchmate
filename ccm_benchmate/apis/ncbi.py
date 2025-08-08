@@ -73,7 +73,7 @@ class Ncbi:
         stream.close()
         return record
 
-    def show_databses(self):
+    def show_databases(self):
         return self.databases
 
     def get_db_info(self, db):
