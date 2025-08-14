@@ -16,6 +16,14 @@ from sqlalchemy.ext.declarative import declared_attr
 
 Base = declarative_base()
 
+class Project(Base):
+    __tablename__ = 'project'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+
 #APIs table
 class ApiCall(Base):
     __tablename__ = 'api_call'
