@@ -10,7 +10,7 @@ class KnowledgeBase:
     def __init__(self, name):
 
         self.name=name
-
+        self.engine=engine
         # TODO create the engine based on the project name, if there is no database with that name init
         self.meta = MetaData(bind=self.engine)
         self.meta.reflect(bind=self.engine)

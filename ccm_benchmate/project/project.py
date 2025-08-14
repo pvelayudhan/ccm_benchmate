@@ -14,7 +14,7 @@ from ccm_benchmate.literature.literature import Paper, LitSearch
 
 
 
-from ccm_benchmate.knowledge_base.knowledge_base import KnowledgeBase
+#from ccm_benchmate.knowledge_base.knowledge_base import KnowledgeBase
 
 class Apis:
     """
@@ -24,11 +24,12 @@ class Apis:
         self.ensembl = Ensembl()
         self.ncbi = Ncbi(email=email)
         self.reactome = Reactome()
-        self.UniProt = UniProt()
+        self.uniprot = UniProt()
         self.stringdb = StringDb()
         self.biogrid = BioGrid(access_key=biogrid_api_key)
         self.rnacentral = RnaCentral()
         self.intact = IntAct()
+        self.apiset = ["ensembl", "ncbi", "reactome", "uniprot", "stringdb", "biogrid", "rnacentral", "intact"]
 
     def api_call(self, target: str, method: str, *args, **kwargs):
         """
@@ -36,8 +37,8 @@ class Apis:
         Example: obj.api_call("classA", "method1", arg1, arg2, kw=value)
         """
         # Ensure the target exists
-        if not hasattr(self, target):
-            raise ValueError(f"No such subobject: {target}")
+        if target not in self.apiset:
+            raise AttributeError(f"No such api {target} in {self.apiset}")
 
         subobj = getattr(self, target)
 
@@ -58,9 +59,22 @@ class Project:
     this is the metaclass for the whole thing, it will collect all the modules and will be main point for interacting with the knowledgebase
     """
     def __init__(self, description):
+        """
+        Main metaclass for consrcutor, if we are going to use any kind of agentic stuff the description is very important.
+        The generatl description of the project can be used to determine
+        1. if a paper is relevant based on the abstract
+        2. if a gene or a feature of a protein or a domain is relevant based on the description
+
+        etc.
+
+        This will be passed as part of the prompt for the project manger agent.
+
+        :param description: A detailed desscription of the project, this will be used in all aspect of the agentic workflows
+        it is not necessary to use agents but if you would like to automate a bunch of stuff than it might be helpful.
+        """
         self.description = description
         #this is very impcomplete, I will
-        self.kb = KnowledgeBase()
+        #self.kb = KnowledgeBase()
         self.apis = Apis()
         self.genome = None
         self.structures=[]
@@ -82,7 +96,6 @@ class Project:
 
     def collect_papers(self, ids_types, **kwargs):
         """
-
         :param ids_types: these are the id and type of the paper to collect
         :param kwargs: see ccm_benchmate.literature.paper.Paper for kwargs
         :return:self, these will have the processed papers in memory
@@ -97,9 +110,9 @@ class Project:
     def add_papers(self):
         pass
 
-    def add_genome(self, genome_fasta, gtf, name, description, db_conn=self.kb.engine,
+    def add_genome(self, genome_fasta, gtf, name, description, #db_conn=self.kb.engine,
                    transcrcriptome_fasta=None, proteome_fasta=None, create=True,):
-        self.genome=Genome(genome_fasta, gtf, name, description, db_conn,
+        self.genome=Genome(genome_fasta, gtf, name, description, #db_conn,
                            transcrcriptome_fasta, proteome_fasta, create=create,)
         return self
 

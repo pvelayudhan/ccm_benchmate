@@ -7,7 +7,7 @@ import pandas as pd
 from Bio import Seq, SeqIO
 import pysam
 
-from ccm_benchmate.genome.tables import *
+from ccm_benchmate.knowledge_base.tables import *
 from ccm_benchmate.genome.utils import insert_genome
 from ccm_benchmate.ranges.genomicranges import *
 
