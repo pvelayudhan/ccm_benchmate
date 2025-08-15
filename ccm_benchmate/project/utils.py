@@ -1,0 +1,7 @@
+
+
+class ProjectNameError(Exception):
+    pass
+
+
+

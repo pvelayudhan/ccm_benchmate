@@ -1,19 +1,46 @@
+# I'm moving all the tables here so we can see it all in one place,
+# this might not be the ideal solution since the creator of a module will need to add to this as well but it is a minimal burden
+
+
+from sqlalchemy.orm import declarative_base
 
 from sqlalchemy import (
     Column, ForeignKey, Integer, String, DateTime,
     Date, Text, Float, Time, types, Computed, Index, Boolean,
-    JSON, BLOB
+    JSON, BLOB,
 )
-from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import declarative_base
-
+from sqlalchemy.dialects.postgresql import TSVECTOR, JSONB, ARRAY
 from pgvector.sqlalchemy import Vector
 
-
-class TSVector(types.TypeDecorator):
-    impl = TSVECTOR
+from sqlalchemy.ext.declarative import declared_attr
 
 Base = declarative_base()
+
+class Project(Base):
+    __tablename__ = 'project'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+
+#APIs table
+class ApiCall(Base):
+    __tablename__ = 'api_call'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    api_name = Column(String, nullable=False)
+    params =Column(JSON, nullable=False)
+    results=Column(JSON, index=True)
+    query_time = Column(DateTime, nullable=False)
+
+# Literature tables
+
+class TSVector(types.TypeDecorator):
+    """
+    generic class for tsvector type for full text search
+    """
+    impl = TSVECTOR
 
 class Papers(Base):
     __tablename__ = 'papers'
@@ -82,7 +109,173 @@ class BodyText(Base):
                             chunk_ts_vector, postgresql_using='gin'),)
 
 
-#not sure about this
-#class References(Base):
-#    __tablename__ = 'references'
+# genome tables
+class Genome(Base):
+    __tablename__ = 'genome'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    genome_name = Column(String, unique=True)
+    genome_fasta_file = Column(String, nullable=True)
+    transcriptome_fasta_file = Column(String, nullable=True)
+    proteome_fasta_file = Column(String, nullable=True)
+    description=Column(String, nullable=True)
 
+class Chrom(Base):
+    __tablename__ = 'chrom'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    chrom=Column(String, nullable=True)
+    genome_id=Column(Integer, ForeignKey('genome.id'), nullable=True)
+
+class Gene(Base):
+    __tablename__ = 'gene'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    gene_id = Column(String, nullable=False)
+    chrom_id=Column(Integer, ForeignKey('chrom.id'), nullable=False)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    strand = Column(String, nullable=False)
+    annotations=Column(JSON)
+
+class Transcript(Base):
+    __tablename__ = 'transcript'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    transcript_id = Column(String, nullable=False)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    gene_id=Column(Integer, ForeignKey('gene.id'))
+    annotations=Column(JSON)
+
+class Exon(Base):
+    __tablename__ = 'exon'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    exon_id = Column(String, nullable=False)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    exon_number = Column(Integer, nullable=False)
+    transcript_id=Column(Integer, ForeignKey('transcript.id'), nullable=False)
+    annotations = Column(JSON)
+
+class ThreeUTR(Base):
+    __tablename__ = 'three_utr'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    transcript_id = Column(Integer, ForeignKey('transcript.id'), nullable=True)
+    annotations = Column(JSON)
+
+class FiveUTR(Base):
+    __tablename__ = 'five_utr'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    transcript_id = Column(Integer, ForeignKey('transcript.id'), nullable=True)
+    annotations = Column(JSON)
+
+class Cds(Base):
+    __tablename__ = 'coding'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    cds_id = Column(String, nullable=True)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    phase=Column(Integer, nullable=False)
+    exon_id = Column(Integer, ForeignKey('exon.id'), nullable=False)
+    annotations = Column(JSON)
+
+class Introns(Base):
+    __tablename__ = 'intron'
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    transcript_id = Column(Integer, ForeignKey('transcript.id'), nullable=False)
+    intron_rank = Column(Integer, nullable=False)
+    start=Column(Integer)
+    end=Column(Integer)
+    annotations = Column(JSON)
+
+# sequence tables
+class Sequence(Base):
+    __tablename__ = 'sequence'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    name = Column(String)
+    sequence = Column(String)
+    type = Column(String)
+    msa_path=Column(String, nullable=True)
+    blast_path=Column(String, nullable=True)
+    embeddings=Column(Vector)
+    features=Column(JSONB)
+
+class SequenceList(Base):
+    __tablename__ = 'sequence_list'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    sequence=Column(ForeignKey('sequence.id'))
+
+
+# structure tables
+class Structure(Base):
+    __tablename__="structure"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    name=Column(String)
+    chains=Column(JSONB) #all the chaing is the pdb, I'm just storing the whole thing here not sure if a good idea
+    structure=Column(Text) #this is a pdb dump
+    features=Column(JSONB)
+
+
+class BaseVariant:
+    """Abstract base class for all variant types."""
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chrom = Column(String, nullable=False, index=True)
+    pos = Column(Integer, nullable=False, index=True)
+    filter = Column(String)  # Callset-specific
+
+class SequenceVariant(Base, BaseVariant):
+    """Table for SNV and Indel variants."""
+    ref = Column(String, nullable=False, index=True)
+    alt = Column(String, nullable=False, index=True)
+    qual = Column(Float)  # Callset-specific
+    gq = Column(Float)   # Sample-specific
+    gt = Column(String, index=True)   # Sample-specific
+    dp = Column(Integer)  # Sample-specific
+    ad = Column(ARRAY(Integer))  # Sample-specific
+    ps = Column(String)   # Sample-specific, Phase set (LRWGS only)
+    length = Column(Integer)  # Calculated
+    annotations = Column(JSON, default=dict, nullable=False, index=True)
+
+class StructuralVariant(Base, BaseVariant):
+    """Table for SV/CNV variants (INS, DEL, INV, DUP, BND, CNV)."""
+    svtype = Column(String, nullable=False)
+    end = Column(Integer, index=True)
+    ref = Column(String, index=True)
+    alt = Column(String, index=True)
+    qual = Column(Float)  # Callset-specific
+    gt = Column(String, index=True)   # Sample-specific
+    dp = Column(Integer)  # Sample-specific
+    ad = Column(ARRAY(Integer))  # Sample-specific
+    svlen = Column(Integer)
+    mateid = Column(String)
+    cn = Column(Integer)
+    cistart = Column(Integer)
+    ciend = Column(Integer)
+    mei_type = Column(String)
+    sr = Column(Integer)  # Sample-specific
+    pr = Column(Integer)  # Sample-specific
+    ps = Column(String)   # Sample-specific
+    annotations = Column(JSON, default=dict, nullable=False, index=True)
+
+class TandemRepeatVariant(Base, BaseVariant):
+    """Table for Tandem Repeat variants (SRWGS and LRWGS)."""
+    end = Column(Integer, nullable=False)
+    gt = Column(String, index=True)   # Sample-specific
+    motif = Column(String)
+    al = Column(Integer)
+    ref = Column(String)
+    alt = Column(String)
+    ms = Column(Integer)  # Sample-specific
+    mc = Column(Integer)  # Sample-specific
+    ap = Column(Float)   # Sample-specific
+    am = Column(Float)   # Sample-specific
+    sd = Column(Integer)  # Sample-specific
+    annotations = Column(JSON, default=dict, nullable=False, index=True)
