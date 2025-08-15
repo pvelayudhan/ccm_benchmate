@@ -1,3 +1,8 @@
+---
+layout: default
+title: Ranges and GenomicRanges Module
+nav_order: 6
+---
 
 # Ranges and GenomicRanges Module
 

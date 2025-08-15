@@ -1,3 +1,8 @@
+---
+layout: default
+title: Literature Module
+nav_order: 5
+---
 
 # Literature Module
 

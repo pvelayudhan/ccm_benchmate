@@ -1,0 +1,56 @@
+# Site settings
+title: CCM Benchmate Documentation
+description: A comprehensive guide to using CCM Benchmate for knowledge aggregation and querying.
+baseurl: "/ccm_benchmate" # Adjust if your site is not in a subdirectory (e.g., set to "" if served from the root)
+url: "https://ccmbio.github.io" # Your GitHub Pages URL
+remote_theme: just-the-docs/just-the-docs # Use the Just the Docs theme
+permalink: pretty # Cleaner URLs for pages
+
+# Enable collections for documentation
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+
+# Default settings for collection pages
+defaults:
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: default
+      nav_order: 1
+
+# Enable plugins required for GitHub Pages
+plugins:
+  - jekyll-remote-theme
+  - jekyll-default-layout
+  - jekyll-titles-from-headings
+
+# Just the Docs specific configurations
+logo: "/assets/images/logo.png" # Optional: Path to a logo image in your repository
+favicon_ico: "/assets/images/favicon.ico" # Optional: Path to a favicon
+search_enabled: true # Enable search bar in the sidebar
+search:
+  heading_level: 2
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 5
+  tokenizer_separator: /[\s/]+/
+aux_links: # Links in the top-right corner
+  "GitHub Repository":
+    - "https://github.com/ccmbio/ccm_benchmate"
+aux_links_new_tab: true # Open auxiliary links in new tabs
+heading_anchors: true # Enable anchor links for headings
+
+
+# Navigation settings for the sidebar
+nav_order: 1 # Default navigation order for pages without specific nav_order
+nav_exclude: false # Include pages unless explicitly excluded
+parent: null # Optional: Define parent-child relationships for nested navigation
+has_children: false # Indicate if a page has subpages
+nav_sort: case_insensitive # Sort navigation items case-insensitively
+
+# GitHub Pages specific settings
+github_pages:
+  source: . # Use the root directory or "docs" if your files are in a docs folder

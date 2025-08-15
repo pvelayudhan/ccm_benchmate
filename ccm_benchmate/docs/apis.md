@@ -1,4 +1,8 @@
-from PIL.features import featuresfrom PIL.features import featuresfrom sympy.physics.units.definitions.dimension_definitions import information
+---
+layout: default
+title: API's module
+nav_order: 3
+---
 
 # API's module
 

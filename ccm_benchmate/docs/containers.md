@@ -1,3 +1,9 @@
+---
+layout: default
+title: Container Runner Module
+nav_order: 10
+---
+
 # Container Runner Module
 
 A module for running Singularity/Docker containers with support for local and SLURM cluster execution.

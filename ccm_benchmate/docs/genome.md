@@ -1,3 +1,8 @@
+---
+layout: default
+title: Genome Module
+nav_order: 4
+---
 
 # Genome Module
 

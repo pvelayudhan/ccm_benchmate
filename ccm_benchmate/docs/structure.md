@@ -1,3 +1,8 @@
+---
+layout: default
+title: Structure Module
+nav_order: 8
+---
 
 # Structure Module
 

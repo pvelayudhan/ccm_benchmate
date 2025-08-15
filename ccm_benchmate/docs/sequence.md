@@ -1,3 +1,8 @@
+---
+layout: default
+title: Sequence Module
+nav_order: 7
+---
 
 # Sequence Module
 
