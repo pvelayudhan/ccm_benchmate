@@ -11,7 +11,7 @@ from ccm_benchmate.knowledge_base.tables import *
 from ccm_benchmate.genome.utils import insert_genome
 from ccm_benchmate.ranges.genomicranges import *
 
-
+#TODO the genome class currently is not compatible with kb
 class Genome:
     def __init__(self, genome_fasta, gtf, name, description, db_conn,
                  transcriptome_fasta=None,
@@ -86,7 +86,6 @@ class Genome:
 
         chroms_table = self.tables['chrom']
         genes_table = self.tables['gene']
-
 
         query = sqlalchemy.select(
             genes_table.c.gene_id,
