@@ -4,9 +4,7 @@ title: Installation
 nav_order: 2
 ---
 
-<div style="text-align: center;">
-    <img src="./assets/installation.png" width="900" alt="CCM Benchmate logo" class="center">
-</div>
+![](assets/installation.png)
 
 # Installation Instructions
 

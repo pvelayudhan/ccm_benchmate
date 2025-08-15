@@ -4,9 +4,11 @@ title: Home
 nav_order: 1
 ---
 
-# CCM Benchmate Documentation
+<div style="text-align: center;">
+    <img src="./assets/benchmate.png" width="900" alt="CCM Benchmate logo" class="center">
+</div>
 
-# CCM Benchmate package:
+# CCM Benchmate Documentation
 
 This package aims to provide an integration setup for different biological from different sources and formats. There are
  several modules that are designed to work together to allow researchers to combine data from public databases, papers 
@@ -176,4 +178,4 @@ data sources and modalitites as possible.
 
 The best way to contact us is via github issues, you can create an issue about problems you are facing or features, datasets, containers you would like to have. 
 If you have container/code pipeline etc. That you think others could use, you can create a module for it and create a pull request or make changes to one of the existing modules. 
-Please see [CONTRIBUTING.md]((docs/contributing.md) for how to do that and basic reccomendations about our (very relaxed) code standards. 
+Please see [CONTRIBUTING.md](docs/contributing.md) for how to do that and basic reccomendations about our (very relaxed) code standards. 
