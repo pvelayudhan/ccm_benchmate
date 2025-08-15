@@ -40,6 +40,8 @@ search:
 aux_links: # Links in the top-right corner
   "GitHub Repository":
     - "https://github.com/ccmbio/ccm_benchmate"
+  "CCM Website":
+    - "https://ccm.sickkids.ca/"
 aux_links_new_tab: true # Open auxiliary links in new tabs
 heading_anchors: true # Enable anchor links for headings
 

@@ -1,4 +1,8 @@
-
+---
+layout: default
+title: Contirbuting
+nav_order: 10
+---
 
 <div style="text-align: center;">
     <img src="./assets/contributing.jpeg" width="500" alt="CCM Benchmate logo" class="center">
