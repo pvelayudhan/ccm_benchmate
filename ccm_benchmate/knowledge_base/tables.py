@@ -209,7 +209,6 @@ class SequenceList(Base):
     project_id = Column(Integer, ForeignKey('project.id'))
     sequence=Column(ForeignKey('sequence.id'))
 
-
 # structure tables
 class Structure(Base):
     __tablename__="structure"
@@ -220,6 +219,19 @@ class Structure(Base):
     structure=Column(Text) #this is a pdb dump
     features=Column(JSONB)
 
+class Molecule(Base):
+     __tablename__="molecule"
+     id = Column(Integer, primary_key=True, autoincrement=True)
+     project_id = Column(Integer, ForeignKey('project.id'))
+     name=Column(String)
+     smiles=Column(String)
+     bound_structure=Column(ForeignKey('structure.id'))
+     fingerprint_dim=Column(Integer, default=2048)
+     fingerprint_radius=Column(Integer, default=2)
+     ecfp4=Column(ARRAY)
+     fcfp4=Column(ARRAY)
+     maccs=Column(ARRAY)
+     properties=Column(JSONB)
 
 class BaseVariant:
     """Abstract base class for all variant types."""

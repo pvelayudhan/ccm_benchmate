@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from typing import Optional
 
 from rdkit import Chem
 import numpy as np
@@ -5,41 +7,53 @@ from usearch_molecules.dataset import FingerprintedDataset, shape_ecfp4, shape_f
 
 from ccm_benchmate.structure.structure import Structure
 
+@dataclass
+class MoleculeInfo:
+    name: str
+    smiles: str
+    mol: Chem.rdchem.Mol = None
+    fingerprint_dim: int = 2048
+    fingerprint_radius: int = 2
+    bound_structure: Optional[Structure] = None
+    ecfp4: Optional[np.ndarray] = None
+    fcfp4: Optional[np.ndarray] = None
+    maccs: Optional[np.ndarray] = None
+    properties: Optional[dict] = None
+
 
 class Molecule:
     """
     Molecule class to represent chemical structures using SMILES or InChI. this will include methods for different property
     calculations and structure comparisons using usearch molecules.
     """
-    def __init__(self, smiles=None, bound_structure=None, fingerprint_dim=2048, radius=2):
+    def __init__(self, name, smiles, bound_structure=None, fingerprint_dim=2048, radius=2):
         """
         Initialize a Molecule object with a SMILES string.
         :param smiles: A SMILES or InChI representation of the molecule.
         :param bound_structure: A bound strcutre this is a pdb it will become a strcture object upon loading
         """
-        self.smiles = smiles
-        self.mol = Chem.MolFromSmiles(smiles)
+        self.info=MoleculeInfo(name=name, smiles=smiles)
+        self.info.mol = Chem.MolFromSmiles(smiles)
         if bound_structure is not None:
-            self.bound_structure = Structure(pdb=bound_structure)
-        else:
-            self.bound_structure=None
-        self.fingerprint_dim = fingerprint_dim
-        self.fingerprint_radius=radius
-        self.ecfp4 = self._fingerprint(type="ecfp4")
-        self.fcfp4 = self._fingerprint(type="fcfp4")
-        self.maccs = self._fingerprint(type="maccs")
+            self.info.bound_structure = Structure(pdb=bound_structure)
+        self.info.fingerprint_dim = fingerprint_dim
+        self.info.fingerprint_radius=radius
+        self.info.ecfp4 = self._fingerprint(type="ecfp4")
+        self.info.fcfp4 = self._fingerprint(type="fcfp4")
+        self.info.maccs = self._fingerprint(type="maccs")
+        self.info.properties = self._properties()
 
 
     def _fingerprint(self, type="ecfp4"):
         if type == "ecfp4":
-            fpgen = Chem.rdFingerprintGenerator.GetMorganGenerator(radius=self.fingerprint_radius,
+            fpgen = Chem.FingerprintGenerator.GetMorganGenerator(radius=self.fingerprint_radius,
                                                                    fpSize=self.fingerprint_dim,
                                                                    atomInvariantsGenerator=Chem.rdFingerprintGenerator.GetMorganAtomInvGen())
             fp = fpgen.GetFingerprint(self.mol)
         elif type == "fcfp4":
-            fpgen=Chem.rdFingerprintGenerator.GetMorganGenerator(radius=self.fingerprint_radius,
+            fpgen=Chem.FingerprintGenerator.GetMorganGenerator(radius=self.fingerprint_radius,
                 fpSize=self.fingerprint_dim,
-                atomInvariantsGenerator=Chem.rdFingerprintGenerator.GetMorganFeatureAtomInvGen())
+                atomInvariantsGenerator=Chem.FingerprintGenerator.GetMorganFeatureAtomInvGen())
             fp = fpgen.GetFingerprint(self.mol)
         elif type == "maccs":
             fp=Chem.MACCSkeys.GenMACCSKeys(self.mol)
@@ -84,7 +98,7 @@ class Molecule:
             :return: 6 coordinates of the bounding box
             """
 
-            if self.bound_sturcutre is None:
+            if self.bound_structure is None:
                 raise ValueError("bound_sturcutre must be set for bounding box calculation")
 
             coord = []
@@ -107,13 +121,46 @@ class Molecule:
 
             return {"xmax": x_max, "ymax": y_max, "zmax": z_max, "xmin": x_min, "ymin": y_min, "zmin": z_min}
 
-
+    def _properties(self, missingVal=None):
+        """
+        calculate all the descriptors that rdkit can mange and return a dictionary of them
+        :return: a dictionary of properties
+        """
+        res = {}
+        for nm, fn in Chem.Descriptors._descList:
+            # some of the descriptor fucntions can throw errors if they fail, catch those here:
+            try:
+                val = fn(self.info.mol)
+            except:
+                # print the error message:
+                import traceback
+                traceback.print_exc()
+                # and set the descriptor value to whatever missingVal is
+                val = missingVal
+            res[nm] = val
+        return res
 
     def __repr__(self):
-        return f"Molecule(smiles={self.smiles}, InChI={self.InChI})"
+        return f"Molecule(name={self.info.name}, smiles={self.info.smiles})"
 
     def __str__(self):
-        return f"Molecule with SMILES: {self.smiles} and InChI: {self.InChI}"
+        return f"Molecule(name={self.info.name}, smiles={self.info.smiles})"
+
+    def __eq__(self, other):
+        if self.info.smiles == other.info.smiles:
+            return True
+        else:
+            return False
+
+    def __ne__(self, other):
+        if not isinstance(other, Molecule):
+            return True
+        elif self == other:
+            return False
+        else:
+            return True
+
+
 
 
 
