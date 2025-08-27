@@ -52,8 +52,6 @@ def interpret_image(image, prompt, processor, model, max_tokens, device):
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     return output_text
 
-#TODO add tables test a paper with wester/northern blots
-#TODO alternate method to include paper abstract
 def process_pdf(pdf, lp_model=paper_processing_config["lp_model"], interpret_figures=True, interpret_tables=True,
                 vl_model=paper_processing_config["vl_model"], zoomx=2, device="cuda", max_tokens=400, figure_prompt=figure_messages,
                 table_prompt=table_message):
@@ -128,7 +126,6 @@ def process_pdf(pdf, lp_model=paper_processing_config["lp_model"], interpret_fig
 
     return article_text, figures, tables, figure_interpretation, table_interpretation
 
-#TODO this is not model agnostic we are relying on colpali it's ok for now but will need to be changed
 def image_embeddings(images, model_dir=paper_processing_config["image_embedding_model"],
                      device="cuda:0"):
 
@@ -235,8 +232,7 @@ def filter_openalex_response(response, fields=None):
     return new_response
 
 
-#currenlt using this because semantich scholar has not given me an api key, I emailed them multiple times
-# openalex does not have abstracts but we already have functions to get them from arxiv and pubmed
+# I give up on semantic scholar, it is unlikely I will get an api key, and openalex is good enough
 def search_openalex(id_type, paper_id, fields=None, cited_by=False, references=False, related_works=False):
     base_url = "https://api.openalex.org/works/{}"
     if id_type == "doi":
