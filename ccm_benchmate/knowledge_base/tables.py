@@ -6,13 +6,19 @@ from sqlalchemy.orm import declarative_base
 
 from sqlalchemy import (
     Column, ForeignKey, Integer, String, DateTime,
-    Date, Text, Float, Time, types, Computed, Index, Boolean,
-    JSON, BLOB,
+    Text, Float, types, Computed, Index,
+    JSON, BLOB, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR, JSONB, ARRAY
 from pgvector.sqlalchemy import Vector
 
 from sqlalchemy.ext.declarative import declared_attr
+
+class TSVector(types.TypeDecorator):
+    """
+    generic class for tsvector type for full text search
+    """
+    impl = TSVECTOR
 
 Base = declarative_base()
 
@@ -30,33 +36,29 @@ class ApiCall(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey('project.id'))
     api_name = Column(String, nullable=False)
-    params =Column(JSON, nullable=False)
-    results=Column(JSON, index=True)
+    params =Column(JSONB, nullable=False)
+    results=Column(JSONB, index=True)
     query_time = Column(DateTime, nullable=False)
 
 # Literature tables
 
-class TSVector(types.TypeDecorator):
-    """
-    generic class for tsvector type for full text search
-    """
-    impl = TSVECTOR
-
 class Papers(Base):
     __tablename__ = 'papers'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey('project.id'))
+    source_id = Column(String, nullable=False)
     source=Column(String, nullable=False) #pubmed or arxiv
-    source_id=Column(String, nullable=False)
     title=Column(String, nullable=False)
-    doi=Column(String, nullable=True)
     pdf_url = Column(String, nullable=True)
     pdf_path=Column(String, nullable=True)
     abstract=Column(Text, nullable=True)
     abstract_embeddings=Column(Vector(1024))
+    openalex_response=Column(JSONB, nullable=True)
     abstract_ts_vector=Column(TSVector, Computed("to_tsvector('english', abstract)",
                                                  pesisted=True))
     __table_args__ = (Index('ix_abstract_ts_vector',
-                            abstract_ts_vector, postgresql_using='gin'),)
+                            abstract_ts_vector, postgresql_using='gin'),
+                      UniqueConstraint('source', 'source_id'),)
 
 
 class Figures(Base):
@@ -64,16 +66,12 @@ class Figures(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     paper_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
     image_blob=Column(BLOB, nullable=False)
-    caption=Column(Text, nullable=True)
     ai_caption=Column(Text, nullable=False)
     image_embeddings=Column(Vector(1024))
-    caption_embeddings=Column(Vector(1024))
     ai_caption_embeddings=Column(Vector(1024))
-    caption_ts_vector=Column(TSVector, Computed("to_tsvector('english', caption)",))
     ai_caption_ts_vector=Column(TSVector, Computed("to_tsvector('english', ai_caption)",))
 
-    __table_args__ = (Index('ix_caption_ts_vector',
-                            caption_ts_vector, postgresql_using='gin'),
+    __table_args__ = (
                       Index('ix_ai_caption_ts_vector',
                             ai_caption_ts_vector, postgresql_using='gin'),
                       )
@@ -82,22 +80,27 @@ class Tables(Base):
     __tablename__ = 'tables'
     paper_id = Column(Integer, ForeignKey(Papers.id), nullable=False)
     image_blob = Column(BLOB, nullable=False)
-    caption = Column(Text, nullable=True)
     ai_caption = Column(Text, nullable=False)
     image_embeddings = Column(Vector(1024))
-    caption_embeddings = Column(Vector(1024))
     ai_caption_embeddings = Column(Vector(1024))
-    caption_ts_vector = Column(TSVector, Computed("to_tsvector('english', caption)", ))
     ai_caption_ts_vector = Column(TSVector, Computed("to_tsvector('english', ai_caption)", ))
 
-    __table_args__ = (Index('ix_caption_ts_vector',
-                            caption_ts_vector, postgresql_using='gin'),
+    __table_args__ = (
                       Index('ix_ai_caption_ts_vector',
                             ai_caption_ts_vector, postgresql_using='gin'),
                       )
-
 class BodyText(Base):
-    __tablename__ = 'body_text'
+    __tablename__ = 'body_text_full'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    paper_id = Column(Integer, ForeignKey(Papers.id), nullable=False)
+    full_text=Column(Text, nullable=False)
+    full_text_ts_vector = Column(TSVector, Computed("to_tsvector('english', full_text)", ))
+    __table_args__ = (Index('ix_full_text_ts_vector',
+                            full_text_ts_vector, postgresql_using='gin'),)
+
+
+class ChunkedBodyText(Base):
+    __tablename__ = 'body_text_chunked'
     id = Column(Integer, primary_key=True, autoincrement=True)
     paper_id = Column(Integer, ForeignKey(Papers.id), nullable=False)
     chunk_id=Column(Integer, nullable=False)
@@ -108,6 +111,23 @@ class BodyText(Base):
     __table_args__ = (Index('ix_chunk_ts_vector',
                             chunk_ts_vector, postgresql_using='gin'),)
 
+class References(Base):
+    __tablename__ = 'references'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+    target_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+
+class CitedBy(Base):
+    __tablename__ = 'cited_by'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+    target_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+
+class RelatedWorks(Base):
+    __tablename__ = 'related_works'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+    target_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
 
 # genome tables
 class Genome(Base):
@@ -134,7 +154,7 @@ class Gene(Base):
     start = Column(Integer, nullable=False)
     end = Column(Integer, nullable=False)
     strand = Column(String, nullable=False)
-    annotations=Column(JSON)
+    annotations=Column(JSONB)
 
 class Transcript(Base):
     __tablename__ = 'transcript'
@@ -143,7 +163,7 @@ class Transcript(Base):
     start = Column(Integer, nullable=False)
     end = Column(Integer, nullable=False)
     gene_id=Column(Integer, ForeignKey('gene.id'))
-    annotations=Column(JSON)
+    annotations=Column(JSONB)
 
 class Exon(Base):
     __tablename__ = 'exon'
@@ -153,7 +173,7 @@ class Exon(Base):
     end = Column(Integer, nullable=False)
     exon_number = Column(Integer, nullable=False)
     transcript_id=Column(Integer, ForeignKey('transcript.id'), nullable=False)
-    annotations = Column(JSON)
+    annotations = Column(JSONB)
 
 class ThreeUTR(Base):
     __tablename__ = 'three_utr'
@@ -161,7 +181,7 @@ class ThreeUTR(Base):
     start = Column(Integer, nullable=False)
     end = Column(Integer, nullable=False)
     transcript_id = Column(Integer, ForeignKey('transcript.id'), nullable=True)
-    annotations = Column(JSON)
+    annotations = Column(JSONB)
 
 class FiveUTR(Base):
     __tablename__ = 'five_utr'
@@ -179,7 +199,7 @@ class Cds(Base):
     end = Column(Integer, nullable=False)
     phase=Column(Integer, nullable=False)
     exon_id = Column(Integer, ForeignKey('exon.id'), nullable=False)
-    annotations = Column(JSON)
+    annotations = Column(JSONB)
 
 class Introns(Base):
     __tablename__ = 'intron'
@@ -188,7 +208,7 @@ class Introns(Base):
     intron_rank = Column(Integer, nullable=False)
     start=Column(Integer)
     end=Column(Integer)
-    annotations = Column(JSON)
+    annotations = Column(JSONB)
 
 # sequence tables
 class Sequence(Base):
@@ -254,7 +274,7 @@ class SequenceVariant(Base, BaseVariant):
     ad = Column(ARRAY(Integer))  # Sample-specific
     ps = Column(String)   # Sample-specific, Phase set (LRWGS only)
     length = Column(Integer)  # Calculated
-    annotations = Column(JSON, default=dict, nullable=False, index=True)
+    annotations = Column(JSONB, default=dict, nullable=False, index=True)
 
 class StructuralVariant(Base, BaseVariant):
     """Table for SV/CNV variants (INS, DEL, INV, DUP, BND, CNV)."""
@@ -275,7 +295,7 @@ class StructuralVariant(Base, BaseVariant):
     sr = Column(Integer)  # Sample-specific
     pr = Column(Integer)  # Sample-specific
     ps = Column(String)   # Sample-specific
-    annotations = Column(JSON, default=dict, nullable=False, index=True)
+    annotations = Column(JSONB, default=dict, nullable=False, index=True)
 
 class TandemRepeatVariant(Base, BaseVariant):
     """Table for Tandem Repeat variants (SRWGS and LRWGS)."""
@@ -290,4 +310,4 @@ class TandemRepeatVariant(Base, BaseVariant):
     ap = Column(Float)   # Sample-specific
     am = Column(Float)   # Sample-specific
     sd = Column(Integer)  # Sample-specific
-    annotations = Column(JSON, default=dict, nullable=False, index=True)
+    annotations = Column(JSONB, default=dict, nullable=False, index=True)

@@ -24,3 +24,5 @@ class KnowledgeBase:
         else:
             print("Database already exists")
 
+    def __str__(self):
+        return f"KnowledgeBase with tables {self.engine}"
