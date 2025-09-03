@@ -3,6 +3,7 @@ biopython
 torch
 beautifulsoup4
 transformers==4.52.1
+sentence-transformers
 qwen_vl_utils
 accelerate
 datasets
