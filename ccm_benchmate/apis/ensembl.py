@@ -213,6 +213,28 @@ class Ensembl:
         decoded = json.loads(response.text)
         return decoded
 
+    def homology(self, id, type="orthologues", target_species=None, source_species="human"):
+        """
+        Get homology information from the Ensembl REST API for a given ensembl id, this can be used to get orthologues and paralogues
+        :param id: ensembl id, because the ids also specify the species you do not need to specify the species
+        :param type: type of homology, orthologues or paralogues
+        :param target_species: target species to get the homology for, if None all species will be returned
+        :param source_species: source species to get the homology for, default is human
+        :return: a dict of homology information
+        """
+        types=["orthologues", "paralogues"]
+        if type not in types:
+            raise ValueError("type must be one of ['orthologues', 'paralogues']")
+        if target_species is None:
+            ext = f"/homology/id/{source_species}/{id}?type={type}&format=condensed"
+        else:
+            ext = f"/homology/id/{source_species}/{id}?type={type}&target_species={target_species}&format=condensed"
+
+        response = requests.get(f"{self.base_url}{ext}", headers=self.headers)
+        response.raise_for_status()
+        decoded = json.loads(response.text)
+        return decoded
+
     def info(self):
         """
         Get information from the Ensembl REST API, this returns general information about the api,

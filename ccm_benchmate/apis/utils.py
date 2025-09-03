@@ -17,7 +17,6 @@ class ApiCall:
     """
     api_name: str = None
     results: dict = None
-    args: tuple = None
     kwargs: dict = None
     query_time: datetime.datetime = None
 
@@ -62,7 +61,7 @@ class Apis:
         return func(*args, **kwargs)
 
     def call(self, api_name, *args, **kwargs):
-        results = self._dispatch(api_name, *args, **kwargs)
-        return ApiCall(api_name, results, args, kwargs, datetime.datetime.now())
+        results = self._dispatch(api_name,  **kwargs)
+        return ApiCall(api_name, results, kwargs, datetime.datetime.now())
 
 
