@@ -16,7 +16,6 @@ class UniProt:
         self.url = "https://www.ebi.ac.uk/proteins/api/proteins?accession={}"
         self.headers = {'Accept': 'application/json'}
 
-
     def _gather(self, uniprot_id):
         """
         This function gathers data from the UniProt API using the provided uniprot_id.

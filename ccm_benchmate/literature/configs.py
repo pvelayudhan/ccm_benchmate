@@ -5,7 +5,7 @@ paper_processing_config={
     "lp_model":{"config":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/lp_model/config.yaml")),
                 "model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/lp_model/model_final.pth"))},
     "vl_model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/qwen25_7B_instruct")),
-    "text_embedding_model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/specter2")),
+    "text_embedding_model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/qwen_embed_0.6B")),
     "image_embedding_model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/colpali13")),
     "chunking":{
         "model":os.path.abspath(os.path.join(os.path.dirname(__file__),"models/m2v_model/")),

@@ -1,6 +1,4 @@
-import pandas as pd
-
-from sqlalchemy import MetaData, select
+from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
 from ccm_benchmate.knowledge_base.tables import *
@@ -26,3 +24,5 @@ class KnowledgeBase:
         else:
             print("Database already exists")
 
+    def __str__(self):
+        return f"KnowledgeBase with tables {self.engine}"

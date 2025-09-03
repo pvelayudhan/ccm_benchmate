@@ -1,6 +1,4 @@
 import tarfile
-import warnings
-import time
 
 from PIL import Image
 import pytesseract
@@ -8,18 +6,33 @@ import layoutparser as lp
 
 import pymupdf
 import torch
-import requests
 import json
 
-from adapters import AutoAdapterModel
+from sentence_transformers import SentenceTransformer
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, AutoTokenizer
 from qwen_vl_utils import process_vision_info
 from chonkie import SemanticChunker, Model2VecEmbeddings
 from colpali_engine.models import ColPali, ColPaliProcessor
 
-
 from ccm_benchmate.literature.configs import *
 from ccm_benchmate.utils.general_utils import *
+
+# set up semantic chunker so I don't have to do it every time
+params=paper_processing_config["chunking"]
+
+embeddings = Model2VecEmbeddings(params["model"])
+
+chunker = SemanticChunker(
+            embedding_model=embeddings,
+            threshold=params["threshold"],  # Similarity threshold (0-1) or (1-100) or "auto"
+            chunk_size=params["chunk_size"],  # Maximum tokens per chunk
+            min_sentences=params["min_sentences"],  # Initial sentences per chunk,
+            return_type=params["return_type"]  # return a list of strings
+)
+
+embedding_model=SentenceTransformer("Qwen/Qwen3-Embedding-0.6B",
+                                    cache_folder=os.path.abspath(os.path.join(os.path.dirname(__file__),"models/")))
+
 
 def interpret_image(image, prompt, processor, model, max_tokens, device):
     """
@@ -52,8 +65,6 @@ def interpret_image(image, prompt, processor, model, max_tokens, device):
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     return output_text
 
-#TODO add tables test a paper with wester/northern blots
-#TODO alternate method to include paper abstract
 def process_pdf(pdf, lp_model=paper_processing_config["lp_model"], interpret_figures=True, interpret_tables=True,
                 vl_model=paper_processing_config["vl_model"], zoomx=2, device="cuda", max_tokens=400, figure_prompt=figure_messages,
                 table_prompt=table_message):
@@ -128,7 +139,6 @@ def process_pdf(pdf, lp_model=paper_processing_config["lp_model"], interpret_fig
 
     return article_text, figures, tables, figure_interpretation, table_interpretation
 
-#TODO this is not model agnostic we are relying on colpali it's ok for now but will need to be changed
 def image_embeddings(images, model_dir=paper_processing_config["image_embedding_model"],
                      device="cuda:0"):
 
@@ -149,40 +159,24 @@ def image_embeddings(images, model_dir=paper_processing_config["image_embedding_
 
 
 # same model for article text and captions
-def text_embeddings(text, splitting_strategy="semantic",
-               params=paper_processing_config["chunking"]):
-
-    embeddings = Model2VecEmbeddings(params["model"])
-
+# TODO need to move the chunker out of the function so I don't load it every time
+def text_embeddings(text, chunker=chunker, splitting_strategy="semantic", embedding_model=embedding_model):
+    """
+    genereate text embeddings using a chunking strategy and an embedding model. The model is a huggingface senntence transformer
+    and the chunker is a chonkie semantic chunker
+    :param text: text to embed
+    :param chunker: chonkie semantic chunker
+    :param splitting_strategy: whether to use semantic chunking or not
+    :param embedding_model: sentence transformer model
+    :return: chunks and embeddings if not chunked then the whole text and its embedding
+    """
     if splitting_strategy == "semantic":
-        chunker = SemanticChunker(
-            embedding_model=embeddings,
-            threshold=params["threshold"],  # Similarity threshold (0-1) or (1-100) or "auto"
-            chunk_size=params["chunk_size"],  # Maximum tokens per chunk
-            min_sentences=params["min_sentences"],  # Initial sentences per chunk,
-            return_type=params["return_type"]  # return a list of strings
-        )
         chunks = chunker.chunk(text)
-
     elif splitting_strategy == "none":
         chunks=[text]
     else:
         raise NotImplementedError("Semantic splitting and none are the only implemented methods.")
-
-    embeddings = []
-    for chunk in chunks:
-        model = AutoAdapterModel.from_pretrained(params["text_embedding_model"])
-        model.load_adapter(params["text_embedding_model"]+"/adapter",
-                           source="hf", load_as="specter2", set_active=True)
-        tokenizer = AutoTokenizer.from_pretrained(params["text_embedding_model"])
-        inputs = tokenizer(chunk, padding=True, truncation=True,
-                           return_tensors="pt",
-                           return_token_type_ids=False, max_length=512)
-        output = model(**inputs)
-        output=output.last_hidden_state[0]
-        #get mean embedding
-        ems=torch.mean(output, dim=0)
-        embeddings.append(ems)
+    embeddings = embedding_model.encode(chunks)
     return chunks, embeddings
 
 # At this point this is almost legacy because pmc ids are not a reliable source of retrieval. When we can find them
@@ -225,7 +219,7 @@ def extract_pdfs_from_tar(file, destination):
 #This is not for the end user, this is for the developers
 def filter_openalex_response(response, fields=None):
     if fields is None:
-        fields=["id", "doi", "title", "topics", "keywords", "concepts",
+        fields=["id", "ids", "doi", "title", "topics", "keywords", "concepts",
                 "mesh", "best_oa_location", "referenced_works", "related_works",
                 "cited_by_api_url", "datasets"]
     new_response = {}
@@ -234,10 +228,9 @@ def filter_openalex_response(response, fields=None):
             new_response[field] = response[field]
     return new_response
 
-
-#currenlt using this because semantich scholar has not given me an api key, I emailed them multiple times
-# openalex does not have abstracts but we already have functions to get them from arxiv and pubmed
-def search_openalex(id_type, paper_id, fields=None, cited_by=False, references=False, related_works=False):
+# the whole citeby references etc need to be removed and then re-written as a separate function
+# I give up on semantic scholar, it is unlikely I will get an api key, and openalex is good enough
+def search_openalex(id_type, paper_id, fields=None):
     base_url = "https://api.openalex.org/works/{}"
     if id_type == "doi":
         paper_id = f"https://doi.org/:{paper_id}"
@@ -247,61 +240,16 @@ def search_openalex(id_type, paper_id, fields=None, cited_by=False, references=F
         paper_id = f"pmid:{paper_id}"
     elif id_type == "pmcid":
         paper_id = f"pmcid:{paper_id}"
+    elif id_type == "openalex":
+        paper_id=paper_id
 
     url = base_url.format(paper_id)
     response = requests.get(url)
     try:
         response = json.loads(response.content.decode().strip())
         new_response = filter_openalex_response(response, fields)
-
-        if cited_by:
-            if "cited_by_api_url" in new_response.keys():
-                time.sleep(1)
-                cited_by=requests.get(new_response["cited_by_api_url"])
-                cited_by.raise_for_status()
-                cited_by = json.loads(cited_by.content.decode().strip())
-                cited_by = cited_by["results"]
-                cited_by_list = []
-                for cited in cited_by:
-                    cited_by_list.append(filter_openalex_response(cited, fields))
-                new_response["cited_by"] = cited_by_list
-
-        if references:
-            new_response["reference_details"]=[]
-            count=0
-            counter= len(new_response["referenced_works"]) if len(new_response["referenced_works"])<10 else 10
-            while count < counter:
-                for i in range(len(new_response["referenced_works"])):
-                    ref_id=new_response["referenced_works"][i].split("/").pop()
-                    url=base_url.format(ref_id)
-                    ref=requests.get(url)
-                    ref.raise_for_status()
-                    ref=json.loads(ref.content.decode().strip())
-                    count=count+1
-                    ref=filter_openalex_response(ref, fields)
-                    new_response["reference_details"].append(ref)
-            else:
-                time.sleep(1)
     except:
-        warnings.warn("Could not find a paper with the given ID.")
-        new_response=None
-
-    if related_works and new_response is not None:
-        new_response["related_works_details"]=[]
-        count=0
-        counter = len(new_response["related_works"]) if len(new_response["related_works"]) < 10 else 10
-        while count < counter:
-            for i in range(len(new_response["related_works"])):
-                ref_id=new_response["related_works"][i].split("/").pop()
-                url=base_url.format(ref_id)
-                ref=requests.get(url)
-                ref.raise_for_status()
-                ref=json.loads(ref.content.decode().strip())
-                count=count+1
-                ref=filter_openalex_response(ref, fields)
-                new_response["related_works_details"].append(ref)
-        else:
-            time.sleep(1)
+        raise ValueError("Could not retrieve information for paper id {} of type {}".format(paper_id, id_type))
 
     return new_response
 
@@ -343,3 +291,43 @@ def search_semantic_scholar(paper_id, id_type, api_key=None, fields=None):
     response.raise_for_status()
     response=json.loads(response.content.decode().strip())
     return response
+
+def symmetric_score(sim):
+    """
+    get symetric score for a similarity matrix of a given text and project description
+    :param sim: pairwise similarlty matrix of semantic chunks
+    :return: float, symmetric score of mean max similarities
+    """
+    # Mean of max similarities from rows (text1 to other)
+    mean_max_row = torch.max(sim, dim=1).values.mean().item()
+    # Mean of max similarities from columns (other to text1)
+    mean_max_col = torch.max(sim, dim=0).values.mean().item()
+    # Symmetric score
+    return (mean_max_row + mean_max_col) / 2
+
+#TODO this might need to move to project instance because this can be used for other things like uniport description or other
+# free text that is in the other api calls.
+def text_score(project_description, paper_abstracts, chunker=chunker, embedding_model=embedding_model):
+    """
+    calculate a relevance score between a project description and a paper abstract, this is done by comparing
+    each semantic chunk of the project description to each semantic chunk of each abstract. for an m desccirption chunks
+    and n abstracts chunks we get an m x n matrix of cosine similarities. the final score is calculated taking some measure (max)
+    for each row and then comparing the resulting vector of lenght n to all the other comparisions.
+    :param project_description: string
+    :param paper_abstract: list of strings
+    :param chunker: SemanticChunker instance
+    :param embedding_model: a model to generate embeddings
+    :return: list of floats one for each abstract in the same order as the input list
+    """
+    project_description_chunks, project_description_embeddings = text_embeddings(project_description, chunker=chunker,
+                                                                                 splitting_strategy="semantic")
+    paper_scores = []
+    for paper_abstract in paper_abstracts:
+        abstract_chunks, abstract_embeddings = text_embeddings(paper_abstract, chunker=chunker,
+                                                              splitting_strategy="semantic")
+        sim=embedding_model.similarity(project_description_embeddings, abstract_embeddings)
+        score=symmetric_score(sim)
+        paper_scores.append(score)
+
+    return paper_scores
+
