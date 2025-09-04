@@ -6,10 +6,10 @@ nav_order: 3
 
 # API's module
 
-This module includes the API classes for the ccm_demo application. Each API class is responsible for 
+This module includes the API classes for the ccm_benchmate package. Each API class is responsible for 
 handling a specific type of request and returning the appropriate response. The classes assume that you know what you are
 looking for and gives you the power to link different public databases to each other programmatically. Each of the apis
-return a dictionary with varying degrees and the parsing also is different. The API classes are as follows:
+return a dictionary with varying structures and the parsing also is different. The API classes are as follows:
 
 The apis marked with (WIP) are still under development and may not be fully functional yet.
 
@@ -20,7 +20,6 @@ The apis marked with (WIP) are still under development and may not be fully func
 + stringdb
 + Intact
 + RNAcentral
-+ EBI tools (requires testing)
 + BioGrid
 
 
@@ -31,9 +30,12 @@ Here is a `README.md` for the classes under `ccm_benchmate/apis`. Each section d
 ## ensembl.Ensembl
 
 **Description:**  
-Client for the Ensembl REST API. Supports gene, variant, phenotype, sequence, mapping, and overlap queries.
+Client for the Ensembl REST API. Supports gene, variant, phenotype, sequence, mapping, and overlap queries. There are a lot of different functionalities in each of the different methods so please
+test different options to see which one is best suited for your needs. 
 
-**Usage Examples:**
+### Variation methods
+
+
 ```python
 from ccm_benchmate.apis.ensembl import Ensembl
 from ccm_benchmate.ranges.genomicranges import GenomicRange
@@ -41,161 +43,235 @@ from ccm_benchmate.ranges.genomicranges import GenomicRange
 ensembl = Ensembl()
 
 # Variation info
-info = ensembl.variation("rs56116432")
-info_translated = ensembl.variation("rs56116432", method="translate")
+info = ensembl.variation("rs56116432", add_annotations=True) # if you do not use the add annotations option the response would be a lot smaller
+
+# this returns all the variants that are mentioned in a specific paper keep in mind that if you are looking for a very recent
+# paper it might not be available yet
 info_pub = ensembl.variation("26318936", method="publication", pubtype="pubmed")
 
-# VEP (requires Variant class)
-# myvar = Variant(1, 6524705, 6524705, "C", "T")
-# vep_info = ensembl.vep(myvar, check_exists=True)
+# translate method translates one variant representation to other formats
+info_translated = ensembl.variation("rs56116432", method="translate")
 
-# Phenotype
-grange = GenomicRange(9, 22125503, 22125502, "+")
-phenotypes = ensembl.phenotype(grange)
-
-# Sequence
-seq = ensembl.sequence("ENSG00000139618")
-
-# Overlap
-features = ["gene", "transcript", "cds", "exon", "repeat"]
-overlap = ensembl.overlap(grange, features)
-
-# Xrefs
-xrefs = ensembl.xrefs("ENSG00000139618")
-
-# Mapping
-mapping = ensembl.mapping("ENSP00000288602", 100, 300)
-
-# Info
-info = ensembl.info()
 ```
+
+### VEP
+
+VEP is ensembls **V**ariant **E**ffect **P**redictor. You can run vep on a single variant and return **a lot** of information based on what additionaly tools you have selected to use. To be able to use the vep method you will need to use
+`ccm_benchmate.variant.variant` module. 
+
+```python
+from ccm_benchmate.variant.variant import SequenceVariant
+myvar= SequenceVariant(1, 55051215, 'G', 'GA')
+
+vep_info = ensembl.vep(species="human", variant=myvar, tools=None)
+vep_info
+```
+
+There are many tools that can be called with the VEP method. You can see the whole list in the VEP [website](https://useast.ensembl.org/info/docs/tools/vep/script/vep_options.html)
+
+### Phenotype
+
+If you are interested in what phenotypes are associated with a genomic region you can use the `GenomicRanges` module and the phenotype method:
+
+```python
+from ccm_benchmate.ranges.genomicranges import GenomicRange
+grange = GenomicRange(9, 22125503, 22125520, "+")
+phenotypes = ensembl.phenotype(grange)
+phenotypes
+
+# or for a given range you can search for overlapping features (you can also do this in the genome module and it's the preffered method if you are planning to query a lot of different things)
+overlap = ensembl.overlap(grange, features=["transcript"])
+```
+
+### Mapping
+
+If you have some genomic feature id and you want to convert them to something else you can use the mapping method. This could mean convering genomic coodinates to cDNA or protein coodiates to genomic coordinate etc. 
+
+```python
+
+ensembl.mapping("ENST00000650946", 100, 120, type="cDNA")
+
+```
+
+### xrefs
+
+Ensembl is a massive resource, it contains constantly updated cross-references to other databases. This is especially useful in our case because we can use this method to retrieve ids which then can be used to query other enpoints. 
+
+```python
+xrefs = ensembl.xrefs("ENSG00000139618")
+```
+
+Finally, you can return about the species, and the kinds of infromation that is available in the api (there may be changes and that is beyond our control) using `Ensembl.info` method.
+
+---
+
+## stringdb.StrinDb
+
+Stringdb is a web platform that focuses on protein-protein interactions, you will need to specify your species and protein identifiers. I've also built in an option to run the 
+interaction queires recursively. That is, you can take a protein and gather all the other proteins that interact with it, then take them all and repeat the process to generate 
+a network of arbitrary depth. Of course this will increase the number things returned exponentially and will talke exponentially longer. So keep that in mind.
+
+```python
+from ccm_benchmate.apis.stringdb import StringDb
+stringdb=StringDb()
+
+network = stringdb.gather("human", name="ENSP00000354587", get_network=False)
+
+```
+
+Get network specifies whether you wanto get the itneractors of interactor. If you specify that to True and network depth. The number will grow exponentially, so anything over 3 is probably overkill by a wide margin. You can use a wide range of identifiers, in the example above we are using an ensembl protein id (things need to be proteins) but it can be a whole bunch of other ids. See their [documentation](https://string-db.org/cgi/help.pl?subpage=api%23mapping-identifiers) for details. 
+
+---
+
+
+## others.BioGrid
+
+Biogrid is a similar platform that focuses on protein-proteininteractions with some experimental data annotaions as to how that interaction is determined. To use biogrid you need to get an access key but it is free.
+
+```python
+from ccm_benchmate.apis.others import BioGrid
+biogrid=BioGrid(access_key="<your api key>")
+
+interactions=biogrid.interactions(gene_list=["ENSP00000354587"]) # you can provide more than one gene
+
+
+# list all available organisms
+biogrid.organisms
+```
+
+---
+
+## others.IntAct
+
+Intact is one other interaction database. There were a lot of requests to include all of these in the package, While they provide similar information they do have different use cases.
+
+```python
+from ccm_benchmate.apis.others import IntAct
+intact=IntAct(page_size=100)
+
+# to search intact you need the ebi id, this you can get from ensembl.xrefs or from uniprot (see below)
+interactions=intact.intact_search("Q05471")
+interactions
+```
+
+Intact database contains information not just about protein-protein interactions but also other molecule types. This means your response could be quite large. Also I have integrated so that the api keeps searching for interactions until the last page is reached. This means you will get all the results once the request is comple but if your request has a lot of information it might take a few seconds or more.
+
+---
+
+## ncbi.Ncbi
+
+This probabaly is the thinnest wrapper around all the apis. The main reason for that is that we cover basically the entrirety of the ncbi database and you have a lot of options and flexibility for querying. As always with that flexibility comes the burden of verbosity. We will cover some of the enpoints in this tutorial for the rest you can check the eutils guide and the ncbi website. One other quirk of this database is, some enpoints return detailed information via the summary endpoint while others return via fetch. You will need to try them out yourself before writing a comprehensive script. 
+
+```python
+from ccm_benchmate.apis.ncbi import Ncbi
+ncbi = Ncbi(email=<your email>) # so ncbi can tell you to stop abusing their resources. Also the rate limit increase dramatically when an email or api key is provided, they put you in the nice queue.
+
+# list all the databases:
+ncbi.databases
+
+```
+
+To search a specific database you will need to specifiy it in the search method. This will return their ncbi ids and nothing else. 
+
+```python
+omim_codes=ncbi.search(db="omim", query="cancer", retmax=1000) # return 1000 items
+```
+
+To get more information about a specific id you can use the `summary` or `fetch` method. 
+
+```python
+mycodes=omim_codes[0:10]
+summaries=[ncbi.summary("omim", code)[0] for code in mycodes]
+
+full_record=ncbi.fetch("omim", omim_codes[0])
+```
+
+I'm not going to go into a lot of details partly because there are so many different databases and all of them either have the summary or fetch (or both like genes) method return something and what they return is different in each case. However, the response per call/db is quite consistent and if you know what you are looking for it's not that difficult to streamline the search and knowledge gathering using these endpoints.
 
 ---
 
 ## uniprot.Uniprot
 
-**Description:**  
-Client for the UniProt API. Retrieves protein information, mutagenesis data, isoforms, and protein-protein interactions.
+Uniprot is an extensive database of proteins and features of proteins, It has several api endpoinst, the ones that are integrated are the most compreshenive ones called: proteins, mutagensis (high throughput mutagenesis experiments), isoforms and variation. You can query this using a single command like so:
 
-**Usage Examples:**
 ```python
-from ccm_benchmate.apis.uniprot import Uniprot
+from ccm_benchmate.apis.uniprot import UniProt
+uniprot=UniProt()
 
-uniprot = Uniprot()
-
-# Get protein info
-protein_info = uniprot.get_protein("P38398")
-
-# Mutagenesis
-mutagenesis = uniprot.get_mutagenesis("P38398")
-
-# Isoforms
-isoforms = uniprot.get_isoforms("P38398")
-
-# Interactions
-interactions = uniprot.get_interactions("P38398")
+results=uniprot.search_uniprot(uniprot_id="P01308", get_isoforms=True, get_variations=True,
+                       get_mutagenesis=True, get_interactions=True, consolidate_refs=True, )
 ```
 
----
+The results are consolidated into a few different locations, you can see the references under `results["references"]` as pubmed ids, there is a `description` that is a plain human readable text of describing the protein. All the keys are below:
 
-## others.BioGrid
-
-**Description:**  
-Client for the BioGRID API. Retrieves molecular interaction data, evidence types, organisms, and supported identifiers.
-
-**Usage Examples:**
 ```python
-from ccm_benchmate.apis.others import BioGrid
-
-biogrid = BioGrid(access_key="YOUR_BIOGRID_KEY")
-
-# Interactions
-interactions_df = biogrid.interactions(
-    gene_list=["TP53", "BRCA1"],
-    id_types=["entrez"],
-    evidence_types=["physical"]
-)
-
-# Evidence types
-evidence_types = biogrid._get_evidence_types()
-
-# Organisms
-organisms = biogrid._get_organisms()
-
-# Supported identifiers
-id_types = biogrid._get_supported_identifiers()
+dict_keys(['id', 'name', 'sequence', 'organism', 'gene', 'feature_types', 'comment_types', 'references', 'xref_types', 'xrefs', 'description', 
+'json', 'secondary_accessions', 'variation', 'interactions', 'mutagenesis', 'isoforms'])
 ```
 
----
+You can see what kinds of features are availble for a given protein using `get_features` method or you can you `get_comments` method to see other kinds of annotations that are more about the whole protein. 
 
-## others.Intact
-
-**Description:**  
-Client for the IntAct molecular interaction database. Fetches protein-protein interactions using EBI IDs.
-
-**Usage Examples:**
 ```python
-from ccm_benchmate.apis.others import Intact
+results["comment_types"]
+results["feature_types"]
 
-intact = Intact()
 
-# Search for interactions by EBI ID
-interactions, last_page = intact._search("EBI-123456")
-
-# Retrieve all interactions for a given interactor (requires intact.interactions to be set)
-# all_interactions_df = intact.intact_search(page=0, page_size=1000)
+uniprot.get_features(results["json"], "SIGNAL")
+uniprot.get_comments(results["json"], "DISEASE")
 ```
 
 ---
 
 ## reactome.Reactome
 
-**Description:**  
-Client for the Reactome API. Accesses pathway and reaction data for genes and proteins.
+Reactome is more concerned about biological reactions, pathways and the genes/proteins that are associated with it. You need ot know your reactome id but I think we can figure that out either through ensembl or uniprot.
 
-**Usage Examples:**
 ```python
 from ccm_benchmate.apis.reactome import Reactome
+reactome=Reactome()
 
-reactome = Reactome()
+# initialization gathers some information that is up to date, these are the fields you can search for
+reactome.show_fields()
 
-# Get pathways for a gene
-pathways = reactome.get_pathways("TP53")
+['species', 'type', 'keyword', 'compartment']
+
+# see all species
+reactome.show_values("species")
+
+# search
+results=reactome.query(query="cancer", species="Homo sapiens", force_filters=False)
+
+results.keys()
+dict_keys(['Pathway', 'Reaction', 'Interactor', 'Set', 'Protein', 'Complex', 'DNA Sequence', 'Icon'])
+
+#get more details about one of the things
+details=reactome.get_details(results["Pathway"][0]["dbId"])
+
+details.keys()
+dict_keys(['dbId', 'displayName', 'stId', 'stIdVersion', 'created', 'modified', 'isInDisease', 'isInferred', 'name', 'releaseDate', 
+    'speciesName', 'authored', 'disease', 'edited', 'literatureReference', 'species', 'summation', 'reviewStatus', 'hasDiagram', 
+    'hasEHLD', 'hasEvent', 'normalPathway', 'schemaClass', 'className'])
 ```
+
+Each of the details has more information that are also stored as dictionaries. The api output is very consistend and some of the fields will be there reliably. That said, it will not hurt to do some basic checks like `"something" in results.keys()` if you are planning to loop through a lot of information. 
 
 ---
 
-## rna.RNACentral
+## rnacentral.RnaCentral
 
-**Description:**  
-Client for the RNAcentral API. Retrieves non-coding RNA information and cross-references.
-
-**Usage Examples:**
+Last but not least we have RNA Central, you will need the rna central id to query, you can get most of these through ensembl xrefs
 
 ```python
-from ccm_benchmate.apis.rnacentral import RNACentral
+from ccm_benchmate.apis.rnacentral import RnaCentral
 
-rna_central = RNACentral()
+#you need the rnacentral id to search
+rnacentral=RnaCentral()
 
-# Get RNA info
-rna_info = rna_central.get_rna("URS000075C6A6")
+results=rnacentral.get_information(id="URS00000CE0D1")
+results.keys()
+
+dict_keys(['url', 'rnacentral_id', 'md5', 'sequence', 'length', 'xrefs', 'publications', 'is_active', 'description', 
+    'rna_type', 'count_distinct_organisms', 'distinct_databases', 'references'])
 ```
 
----
-
-## stringdb.Stringdb
-
-**Description:**  
-Client for the STRING database API. Fetches protein-protein interaction networks and functional enrichment data.
-
-**Usage Examples:**
-```python
-from ccm_benchmate.apis.stringdb import Stringdb
-
-stringdb = Stringdb()
-
-# Get interaction network
-network = stringdb.get_network("9606.ENSP00000354587")
-```
-
----
+The results are fairly obvious. 
