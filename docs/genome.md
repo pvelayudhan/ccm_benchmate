@@ -81,64 +81,7 @@ and are very light on memory but that means that they cannot be saved or pickled
 
 The module uses the following database tables:
 
-### genome
-- `genome_id`
-- `version`
-- `source`
-- `genome_fasta_file` just the file path, there is a os.file check during
-class instance initiation
-- `transcriptome_fasta_file`
-- `proteome_fasta_file`
-- `description`
-
-### chromosome
-- `chrom_id` (PRIMARY KEY)
-- `name` (TEXT)
-- `length` (INTEGER)
-
-### gene
-- `gene_id` (PRIMARY KEY)
-- `chrom` (TEXT)
-- `start` (INTEGER)
-- `end` (INTEGER)
-- `strand` (TEXT)
-- `annot` (JSON)
-
-### transcript
-- `transcript_id` (PRIMARY KEY)
-- `gene_id` (FOREIGN KEY)
-- `chrom` (TEXT)
-- `start` (INTEGER)
-- `end` (INTEGER)
-- `strand` (TEXT)
-- `annot` (JSON)
-
-### exon
-- `exon_id` (PRIMARY KEY)
-- `transcript_id` (FOREIGN KEY)
-- `chrom` (TEXT)
-- `start` (INTEGER)
-- `end` (INTEGER)
-- `strand` (TEXT)
-- `annot` (JSON)
-
-### cds
-- `cds_id` (PRIMARY KEY)
-- `transcript_id` (FOREIGN KEY)
-- `chrom` (TEXT)
-- `start` (INTEGER)
-- `end` (INTEGER)
-- `strand` (TEXT)
-- `annot` (JSON)
-
-### intron
-- `intron_id` (PRIMARY KEY)
-- `transcript_id` (FOREIGN KEY)
-- `chrom` (TEXT)
-- `start` (INTEGER)
-- `end` (INTEGER)
-- `strand` (TEXT)
-- `annot` (JSON)
+![](assets/genome_database.png)
 
 ## Notes:
 

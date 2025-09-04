@@ -1,3 +1,9 @@
+---
+layout: default
+title: Genome Module
+nav_order: 10
+---
+
 # Molecule Module
 
 This is a small module that provides some tools and methods to deal with small molecules. It includes funcitons
