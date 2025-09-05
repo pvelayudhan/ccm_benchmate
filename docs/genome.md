@@ -20,6 +20,10 @@ The `Genome` class provides methods to:
 
 ### Initializing a Genome Object
 
+The below code initializes a `Genome` class instance, if the database connection already has a genome with that name it will just return the connection, if not
+it will create a new genome. This will happen if the database does not have genome with the same name, if there are multiple genomes (you can store as many genomes as you want) with 
+the same name, it will return a value error since we do not have way of knowing which one to use.
+
 ```python
 from ccm_benchmate.genome.genome import Genome
 
@@ -62,20 +66,37 @@ introns = genome.introns(transcript_id="ENST00000380152")
 
 ### Retrieving Sequences
 
+If you have provided a transcriptome or proteome FASTA file, you can retrieve sequences directly by setting the type to "transcriptome" or "proteome" respectively.
+If you have not you will get an error saying something about `None` types since these features are set to `None` by default. 
+
 ```python
 # Get sequence for a specific genomic range
 gr = GenomicRange("chr1", 1000000, 1001000, "+")
 sequence = genome.get_sequence(gr)
 ```
 
-### Generating Transcriptome and Proteome
-
-During initialization if `transcriptome_fasta` and `proteome_fasta` are not provided, the module can generate the 
-transcriptome and proteome sequences and include them as attributes in the class to be queried. These are file connections
-and are very light on memory but that means that they cannot be saved or pickled. 
-
 ### Adding arbitrary annotations:
 
+You can add arbitrary annotations to the genome object, the annotation will have to be structured in a way that is compatible 
+with the database schema. To ensure this compatibility, you will need to specify the "table". This can be one of the following:
+
+- "gene"
+- "transcript"
+- "exon"
+- "cds"
+- "intron"
+- "three_utr" and "five_utr"
+
+Additionally, you will need to specify the row id so we know which feature we need to add the annotation to. These can be obtained
+by querying the database using one of the methods mentioned above. The row id is returned in the "annot" section of the `GenomicsRanges`
+instance with the `db_id` key. If there are additional annotations with within the GTF file you used, these will be in there too. 
+
+If they dictionary key you used to add annotation is already there you will get a value error instead of overwriting the existing annotation.
+This is on purpose since there may be multiple annotations or multiple connections to the database trying to get the same value. 
+
+```python
+genome.add_annotation("gene", 100, {"function": "my_annotation"})
+```
 
 ## Database Schema
 

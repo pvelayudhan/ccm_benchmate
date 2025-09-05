@@ -7,9 +7,10 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy import (
     Column, ForeignKey, Integer, String, DateTime,
     Text, Float, types, Computed, Index,
-    JSON, BLOB, UniqueConstraint
+    JSON, LargeBinary, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR, JSONB, ARRAY
+
 from pgvector.sqlalchemy import Vector
 
 from sqlalchemy.ext.declarative import declared_attr
@@ -55,38 +56,46 @@ class Papers(Base):
     abstract_embeddings=Column(Vector(1024))
     openalex_response=Column(JSONB, nullable=True)
     abstract_ts_vector=Column(TSVector, Computed("to_tsvector('english', abstract)",
-                                                 pesisted=True))
+                                                 persisted=True))
     __table_args__ = (Index('ix_abstract_ts_vector',
                             abstract_ts_vector, postgresql_using='gin'),
                       UniqueConstraint('source', 'source_id'),)
+
+class Authors(Base):
+    __tablename__ = 'authors'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    paper_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
+    name=Column(String, nullable=False)
+    affiliation=Column(String, nullable=True)
 
 
 class Figures(Base):
     __tablename__ = 'figures'
     id = Column(Integer, primary_key=True, autoincrement=True)
     paper_id=Column(Integer, ForeignKey(Papers.id), nullable=False)
-    image_blob=Column(BLOB, nullable=False)
+    image_blob=Column(LargeBinary, nullable=False)
     ai_caption=Column(Text, nullable=False)
     image_embeddings=Column(Vector(1024))
     ai_caption_embeddings=Column(Vector(1024))
     ai_caption_ts_vector=Column(TSVector, Computed("to_tsvector('english', ai_caption)",))
 
     __table_args__ = (
-                      Index('ix_ai_caption_ts_vector',
+                      Index('ix_ai_figure_caption_ts_vector',
                             ai_caption_ts_vector, postgresql_using='gin'),
                       )
 
 class Tables(Base):
     __tablename__ = 'tables'
+    id=Column(Integer, primary_key=True, autoincrement=True)
     paper_id = Column(Integer, ForeignKey(Papers.id), nullable=False)
-    image_blob = Column(BLOB, nullable=False)
+    image_blob = Column(LargeBinary, nullable=False)
     ai_caption = Column(Text, nullable=False)
     image_embeddings = Column(Vector(1024))
     ai_caption_embeddings = Column(Vector(1024))
     ai_caption_ts_vector = Column(TSVector, Computed("to_tsvector('english', ai_caption)", ))
 
     __table_args__ = (
-                      Index('ix_ai_caption_ts_vector',
+                      Index('ix_ai_table_caption_ts_vector',
                             ai_caption_ts_vector, postgresql_using='gin'),
                       )
 class BodyText(Base):
@@ -248,9 +257,9 @@ class Molecule(Base):
      bound_structure=Column(ForeignKey('structure.id'))
      fingerprint_dim=Column(Integer, default=2048)
      fingerprint_radius=Column(Integer, default=2)
-     ecfp4=Column(ARRAY)
-     fcfp4=Column(ARRAY)
-     maccs=Column(ARRAY)
+     ecfp4=Column(ARRAY(Float, dimensions=1))
+     fcfp4=Column(ARRAY(Float, dimensions=1))
+     maccs=Column(ARRAY(Float, dimensions=1))
      properties=Column(JSONB)
 
 class BaseVariant:
@@ -258,6 +267,9 @@ class BaseVariant:
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
+    @declared_attr
+    def project_id(cls):
+        return Column(Integer, ForeignKey('project.id'))
     id = Column(Integer, primary_key=True, autoincrement=True)
     chrom = Column(String, nullable=False, index=True)
     pos = Column(Integer, nullable=False, index=True)

@@ -4,6 +4,8 @@ title: Home
 nav_order: 1
 ---
 
+![](assets/benchmate.png)
+
 # CCM Benchmate Documentation
 
 This package aims to provide an integration setup for different biological from different sources and formats. There are

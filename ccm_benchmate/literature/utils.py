@@ -30,6 +30,7 @@ chunker = SemanticChunker(
             return_type=params["return_type"]  # return a list of strings
 )
 
+#TODO this needs to be a parameter not a fixed thing
 embedding_model=SentenceTransformer("Qwen/Qwen3-Embedding-0.6B",
                                     cache_folder=os.path.abspath(os.path.join(os.path.dirname(__file__),"models/")))
 

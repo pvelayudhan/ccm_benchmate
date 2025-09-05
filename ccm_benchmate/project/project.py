@@ -1,18 +1,5 @@
-from typing import List
-import io
 
-from sqlalchemy import select, insert
-from PIL import Image
-
-
-from ccm_benchmate.apis.utils import ApiCall, Apis
-from ccm_benchmate.genome.genome import Genome
-from ccm_benchmate.literature.literature import Paper, LitSearch, PaperInfo
-from ccm_benchmate.molecule.molecule import Molecule
 from ccm_benchmate.knowledge_base.knowledge_base import KnowledgeBase
-
-from ccm_benchmate.sequence.sequence import Sequence, SequenceList, SequenceDict
-from ccm_benchmate.structure.structure import Structure, Complex
 
 from ccm_benchmate.project.utils import *
 
@@ -23,6 +10,9 @@ class Literature:
         self.litsearch=LitSearch()
         self.paper=Paper()
 
+#TODO this need to be reorganized, because some of the slots do not make sense, I will need to just return things
+# but retain the ability to call methods from other modules especially apis and litsearch and genome, I might need to collect
+# some basic info about all the different data types but that should be it.
 class Project:
     """
     this is the metaclass for the whole thing, it will collect all the modules and will be main point for interacting with the knowledgebase
@@ -65,120 +55,39 @@ class Project:
         else:
             raise ProjectNameError("There are more than one projects with the same name")
 
+        return self
+
     def _kb_create(self):
         self.kb._create_kb()
 
-    def add_papers(self, papers: List[Paper]):
-        """This will add a list of paper class instances and if not a paper class instance or does not have a paperinfo dataclass will raise an error"""
-        papers_table=self.kb.db_tables["papers"]
-        figures_table=self.kb.db_tables["figures"]
-        tables_table=self.kb.db_tables["tables"]
-        body_text_table=self.kb.db_tables["body_text"]
-        chunked_text_table=self.kb.db_tables["body_text_chunked"]
-
-        for item in papers:
+    def to_kb(self, items):
+        """
+        add things to the knowledgebase, these need to instances of some classes that are defined in the package, othewise
+        you will get an error
+        :param items:
+        :return:
+        """
+        for item in items:
             if isinstance(item, Paper):
-                if isinstance(item.info, PaperInfo):
-                    stms=insert(papers_table.c.source_id, papers.c.source, papers.c.title,
-                                papers.c.project_id,
-                                papers.c.abstract, papers.c.abstract_embeddings,
-                                papers.c.pdf_url, papers.c.pdf_path,
-                                papers.c.openalex_response).values(item.info.id, item.info.id_type,
-                                                                   item.info.title,
-                                                                   self.project_id,
-                                                                   item.info.abstract,
-                                                                   item.info.abstract_embeddings,
-                                                                   item.info.download_link,
-                                                                   item.info.pathname,
-                                                                   item.info.opeanlex_info).returning(papers_table.c.paper_id)
-                    paper_id=self.kb.session().execute(stms).scalar()
-                    if item.info.figures is not None:
-                        for i in range(len(item.info.figures)):
-                            img = Image.open(item.info.figures[i])
-                            img_byte_arr = io.BytesIO()
-                            img.save(img_byte_arr, format="JPEG")
-                            img_bytes = img_byte_arr.getvalue()
-                            figure_stms=insert(figures_table.c.paper_id, figures_table.c.image_blob,
-                                               figures_table.c.ai_caption,
-                                               figures_table.c.figure_embeddings,
-                                               figures_table.c.figure_interpretation_embeddings).values(paper_id,
-                                                                                         img_bytes,
-                                                                                         item.info.figure_interpretation[i],
-                                                                                         item.info.figure_embeddings[i],
-                                                                                         item.info.figure_interpretation_embeddings[i]
-                                                                                         )
-                            self.kb.session().execute(figure_stms)
-                    if item.info.tables is not None:
-                        for i in range(len(item.info.tables)):
-                            img = Image.open(item.info.tables[i])
-                            img_byte_arr = io.BytesIO()
-                            img.save(img_byte_arr, format="JPEG")
-                            img_bytes = img_byte_arr.getvalue()
-                            table_smts = insert(tables_table.c.paper_id, tables_table.c.image_blob,
-                                                 tables_table.c.ai_caption,
-                                                 tables_table.c.table_embeddings,
-                                                 tables_table.c.table_interpretation_embeddings).values(paper_id,
-                                                                                           img_bytes,
-                                                                                           item.info.table_interpretation[i],
-                                                                                           item.info.table_embeddings[i],
-                                                                                           item.info.table_interpretation_embeddings[i]
-                                                                                           )
-                            self.kb.session().execute(table_smts)
-
-                    if item.info.text is not None:
-                        text_stms=insert(body_text_table.c.paper_id, body_text_table.c.text,).values(paper_id, item.info.text)
-                        self.kb.session().execute(text_stms)
-
-                    if item.info.text_chunks is not None:
-                        for i in range(len(item.info.text_chunks)):
-                            chunk_stms=insert(chunked_text_table.c.paper_id, chunked_text_table.c.chunk,
-                                              chunked_text_table.c.chunk_embeddings).values(paper_id,
-                                                                                           item.info.text_chunks[i],
-                                                                                           item.info.chunk_embeddings[i])
-                            self.kb.session().execute(chunk_stms)
-                    self.kb.session().commit()
-
-                else:
-                    raise ValueError("Paper instance must have a PaperInfo instance")
+                add_papers([item])
+            elif isinstance(item, ApiCall):
+                add_api_calls([item])
+            elif isinstance(item, Molecule):
+                add_molecules([item])
+            elif isinstance(item, Genome):
+                add_genome(item.genome_fasta, item.gtf, item.name, item.description)
             else:
-                raise TypeError("All items in the papers list must be of type Paper")
+                raise NotImplementedError("Items must be of type Paper, ApiCall, Molecule or Genome")
 
-    #def add_sequences(self, sequences):
-    #    pass
-
-    #def add_structures(self, structures):
-    #    pass
-
-    def add_genome(self, genome_fasta, gtf, name, description, transcriptome_fasta=None, proteome_fasta=None):
-        genome_table=self.kb.db_tables["genome"]
-        query=select(genome_table.c.id, genome_table.c.project_id, genome_table.c.genome_name).filter(genome_table.c.project_id==self.project_id)
-        results = self.kb.session().execute(query).fetchall()
-        if len(results)==0:
-            create=True
-        elif len(results)==1:
-            create=False
-        else:
-            raise ValueError("There are more than one genomes with the same name")
-
-        self.genome=Genome(genome_fasta=genome_fasta, gtf=gtf, name=name, description=description, db_conn=self.kb.engine,
-                           transcriptome_fasta=transcriptome_fasta, proteome_fasta=proteome_fasta, create=create)
-
-    def add_api_calls(self, api_calls: List[ApiCall]):
-        api_table=self.kb.db_tables["api_call"]
-        for item in api_calls:
-            if not isinstance(item, ApiCall):
-                raise ValueError("All items in the api_calls list must be of type ApiCall")
-            else:
-                api_stms=insert(api_table.c.project_id, api_table.c.api_name, api_table.c.params,
-                                api_table.c.results, api_table.c.query_time).values(self.project_id,
-                                                                                    item.api_name,
-                                                                                    item.kwargs,
-                                                                                    item.results,
-                                                                                    item.query_time)
-                self.kb.session().execute(api_stms)
-                self.kb.session().commit()
-
-    def add_molecules(self, molecules):
+    def from_kb(self, project_id, id, id_type):
+        """
+        generate an instance of something from the database, this assumes you know what you are looking for, as it will
+        the autoincremented id of the thing. See the search method to get the ids you need.
+        :param project_id:
+        :param id:
+        :param id_type:
+        :return:
+        """
         pass
 
     #def add_variants(self, variants):
@@ -190,7 +99,7 @@ class Project:
         pass
 
     def __str__(self):
-        return f"Project(name={self.name}, project_id={self.project_id}, description={self.description})"
+        return f"Project(name:\n{self.name}\n\nproject_id:\n{self.project_id}\n\ndescription:\n{self.description})"
 
     def __repr__(self):
         return f"Project(name={self.name}, project_id={self.project_id}"

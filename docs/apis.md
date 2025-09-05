@@ -275,3 +275,12 @@ dict_keys(['url', 'rnacentral_id', 'md5', 'sequence', 'length', 'xrefs', 'public
 ```
 
 The results are fairly obvious. 
+
+
+## Some Meta Programming
+
+Within the apis.utils file there are 2 classes. The `ApiCall` dataclass and the `Apis` "meta" class. While you can use these 
+classes directly to call apis I'm not sure if this is sommething you would want to do. It add additionaly verbosity to the code. 
+
+These classes are there to make it easier to move api calls to the knowledgebase. We will probably be refactoring these in the future
+to be automagically generated whenever an api call is made. 
