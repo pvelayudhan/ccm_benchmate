@@ -106,6 +106,7 @@ class PaperInfo:
     id: str
     id_type: str
     title: Optional[str] = None
+    authors: Optional[list] = None
     abstract: Optional[str] = None
     abstract_embeddings: Optional[np.ndarray]  = None
     text: Optional[str] = None
@@ -122,6 +123,9 @@ class PaperInfo:
     download_link: str = None
     pathname: str = None
     openalex_info: Optional[dict] = None
+    references: Optional[list] = None
+    related_works: Optional[list] = None
+    cited_by: Optional[list] = None
 
 
 
@@ -139,7 +143,7 @@ class Paper:
         :param related_works: if you want to get the related works for the paper, need paper id, cannot do it with pdf
         """
         self.info=PaperInfo(paper_id, id_type)
-        self.info.abstract, self.info.title = self.get_abstract()
+        self.info.abstract, self.info.title, self.info.authors= self.get_abstract()
 
         if search_info:
             self.info.openalex_info, self.info.download_link = self.search_info()
@@ -156,10 +160,8 @@ class Paper:
         if process and self.info.downloaded:
             self.process(self.info.pathname, **process_kwargs)
 
-    #TODO need to add another error check here, in case the paper does not have an abstract or a title, I am not sure
-    # why that would be but just in case.
+    #I cannot imagine a paper where there are not authors I'm not writing a check for that.
     def get_abstract(self):
-
         if self.info.id_type =="pubmed":
             response=requests.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={}".format(self.info.id))
             response.raise_for_status()
@@ -170,6 +172,16 @@ class Paper:
             else:
                 abstract_text=None
             title=soup.find("ArticleTitle").text
+            author_tags=soup.find_all("Author")
+            authors=[]
+            for author in author_tags:
+                affiliation_info=author.find("AffiliationInfo")
+                if len(affiliation_info.find_all("Affiliation"))>0:
+                    authors.append({"name":(author.find("ForeName").text + ", " + author.find("LastName").text),
+                                "affiliation":(author.find("AffiliationInfo").find("Affiliation").text)})
+                else:
+                    authors.append({"name": (author.find("ForeName").text + ", " + author.find("LastName").text),
+                                    "affiliation": None})
 
         elif self.info.id_type == "arxiv":
             response = requests.get("http://export.arxiv.org/api/query?search_query=id:{}".format(self.info.id))
@@ -177,15 +189,21 @@ class Paper:
             soup=bs(response.text, "xml")
             abstract_text = soup.find("summary").text
             #not ideal if arxiv changes things, this will break
-            title=soup.findAll("title")
+            title=soup.find_all("title")
             if len(title)==2:
                 title=title[1].text
             else:
                 title=None
+            author_tags = soup.find_all("author")
+            authors = []
+            for author in author_tags:
+                authors.append({"name": author.find("name").text,
+                                "affiliation": None})
+
         else:
             raise NotImplementedError("source must be pubmed or arxiv other sources are not implemented")
 
-        return abstract_text, title
+        return abstract_text, title, authors
 
     def search_info(self):
         openalex_info = search_openalex(id_type=self.info.id_type, paper_id=self.info.id)
