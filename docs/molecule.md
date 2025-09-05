@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Genome Module
+title: Molecule Module
 nav_order: 10
 ---
 

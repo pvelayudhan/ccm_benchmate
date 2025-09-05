@@ -246,7 +246,7 @@ as well.
 
 If you want to contribute to someone else's code please create a pull request unless you are actively working with
 that person. The tagged person will then review the code and will approve or edit as they see fit. Save for the
-simplest of taskt please keep the discussion within the issues section so we all know what's going on.
+simplest of tasks, please keep the discussion within the issues section so we all know what's going on.
 
 I'm excited to work with you all on this project and sorry for the wall of text. I hope this was not all boring for
 you and it will be a good learning experience for all of us. Please let me know if you run into git issues and need 
@@ -270,3 +270,57 @@ pipeline you can use a single container that has all the dependencies installed.
 
 If you are generating a pipeline using multiple containers please include a `README.md` file that describes how to use the pipeline. 
 Use WDL or Snakemake to generate the pipeline. Your rules should clearly state which containers map to which rules. 
+
+## Writing new modules
+
+If you are writing a new module to represent a new data modalitity that is not represented here you will need a few things and 
+you will need to structure your code in a specific manner. 
+
+Your module should live in a directory within this directory you can include a few things. First you will need a `README.md`
+file that describes the data modalitity and how it is represented in the database. This if this module gets incorporated into the main
+branch we will move this file to the `docs` directory.
+
+Overall, the tree should look like this:
+
+```tree
+.
+├── __init__.py
+├── main_classes.py
+├── tables.py
+├── utils.py
+├── config.py
+├── environment.yaml
+└── requirements.txt
+```
+Let's take a look at each of these files. The `__init__.py` file is a special file that is used to make python treat the directory
+as a module. This is required if you want to be able to `import` your module after installation. 
+
+`main_classes.py` is where you will put all the classes that are used to represent the data modalitity. This should also include
+a `dataclass` that will contain all the information that is needed to represent the modalitity in a way that is compatible with a 
+releatively normalized SQL database. 
+
+`tables.py` is where you will put all the SQLAlchemy models that will be used to represent the data modalitity in a normalized
+SQL database. If there are some columns that are very variable, and it's not possible to represent them in a normalized way
+you can use a dictionary to store the information as a `JSONB` column. If you are storing free text, at least include computed columns
+for tsvector for full-text keyword search. If you are planning to use embedding for any kind of similarity, you will need to add a 
+pgvector column as well. There are many different examples in the `knowledgebase.tables.py` file. 
+
+In at least one of the tables you will need to include a foreingkey to the project id since a database can and should store multiple
+projects. 
+
+`utils.py` is where you will put all the helper functions that are used to process the data modalitity. This should include
+functions that are used to process the data modality and functions that are used to generate the `main_classes.py` and functions that can 
+move the data to the database or create instances of your classes from the database. These latter functions will get incorporated into the project
+utils if we decide to incorporate your module into the main branch.
+
+If some of your classes use a lof of different parameters that may need to be set up just once per project, you can choose to include a `config.py`
+file that will contain a `dictionary` that will contain all the parameters that are needed. This will make it easier to set up the parameters
+for each project. This is not a strict requirement, and you can choose to not include a `config.py` file. This is something we might deprecate in the 
+future. 
+
+Finallly if you have dependencies that are not already in the base `requirements.txt` or conda `environment.yaml` you can include a `requirements.txt` file that will
+list all the dependencies that are needed. This is not a strict requirement, and you can choose to not include a `requirements.txt` file if you 
+do not need any additional dependencies. If you need non-python dependencies, you can also provide a conda `environment.yaml` file.
+
+If you are working on extending an existing module, you can make changes directly in that modules directory. Please follow the same structure as above as 
+well as the guidelines above.
