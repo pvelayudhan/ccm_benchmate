@@ -1,7 +1,7 @@
 # Site settings
 title: CCM Benchmate Documentation
 description: A comprehensive guide to using CCM Benchmate for knowledge aggregation and querying.
-baseurl: "/benchmate" # Adjust if your site is not in a subdirectory (e.g., set to "" if served from the root)
+baseurl: "/ccm_benchmate" # Adjust if your site is not in a subdirectory (e.g., set to "" if served from the root)
 url: "https://ccmbioinfo.github.io" # Your GitHub Pages URL
 remote_theme: just-the-docs/just-the-docs # Use the Just the Docs theme
 permalink: pretty # Cleaner URLs for pages

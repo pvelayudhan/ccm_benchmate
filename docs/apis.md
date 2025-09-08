@@ -23,7 +23,7 @@ The apis marked with (WIP) are still under development and may not be fully func
 + BioGrid
 
 
-Here is a `README.md` for the classes under `ccm_benchmate/apis`. Each section describes the class and provides usage examples for each public method.
+Here is a `README.md` for the classes under `benchmate/apis`. Each section describes the class and provides usage examples for each public method.
 
 ---
 
