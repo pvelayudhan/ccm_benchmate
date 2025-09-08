@@ -1,28 +1,23 @@
 
 from Bio.PDB import *
-from esm.models.esm3 import ESM3
-from esm.sdk.api import ESMProtein, SamplingConfig
+import requests
 
 parser = PDBParser(PERMISSIVE=1)
 
-def get_esm3_embeddings(file, normalize=True, device="cuda"):
-    ESM3InferenceClient = ESM3.from_pretrained("esm3-open").to(device)
-
-    protein = ESMProtein.from_pdb(file)
-    protein_tensor = ESM3InferenceClient.encode(protein)
-
-    if normalize:
-        output = ESM3InferenceClient.forward_and_sample(
-            protein_tensor, SamplingConfig(return_mean_embedding=True)
-        )
-        embeddings = output.mean_embedding
+def download(id, source="PDB", destination=None, load_after_download=True):
+    if source == "PDB":
+        url = "http://files.rcsb.org/download/{}.pdb".format(id)
+    elif source == "AFDB":
+        url = "https://alphafold.ebi.ac.uk/files/AF-{}-F1-model_v4.pdb".format(id)
     else:
-        output = ESM3InferenceClient.forward_and_sample(
-            protein_tensor, SamplingConfig(return_per_residue_embeddings=True)
-        )
-        embeddings = output.per_residue_embedding
-    return embeddings
+        raise NotImplementedError("We can only download structures from PDB or AFDB")
 
+    download = requests.get(url, stream=True)
+    download.raise_for_status()
+    with open("{}/{}.pdb".format(destination, id), "wb") as f:
+        f.write(download.content)
+
+    return destination
 
 
 def get_pocket_dimensions(pocket_path):

@@ -1,6 +1,8 @@
 import os
 import subprocess
+from dataclasses import dataclass
 from io import StringIO
+from typing import List, Dict, Optional
 
 import requests
 import torch
@@ -10,12 +12,18 @@ from biotite.structure import sasa, distance, to_sequence, get_chains
 from biotite.structure.io.pdb import PDBFile
 from biotite.structure.alphabet import to_3di
 
-from ccm_benchmate.structure.utils import *
+from benchmate.structure.utils import *
 
+@dataclass
+class StructureInfo:
+    name: str
+    pdb: str
+    chains: List[str] = None
+    seq_3di: Optional[str] = None
 
-
+#TODO extract names of things that map to each chain, extract name of the sequence or id or some other metadata.
 class Structure:
-    def __init__(self, pdb=None, sequence=None):
+    def __init__(self, name, pdb, id, source="PDB", destination=".", calculate_embeddings=False,):
         """
         constructor for Structure class
         :param pdb:
@@ -23,60 +31,24 @@ class Structure:
         :param predict:
         :param model:
         """
-        self.pdb = pdb
+        self.pdb = os.path.abspath(pdb)
         if pdb is not None:
             self.structure = PDBFile.read(self.pdb).get_structure()[0]
-        if sequence is not None and self.pdb is None:
-            self.sequence = sequence
-        self.sasa = None
-        self.embeddings = None
-        self.seq_3di = None
+
+        if pdb is None and id is not None:
+            pdb=os.path.abspath(download(id, source, destination))
+
+        self.info = StructureInfo(name=name, pdb=pdb)
+        self.info.sasa = self.calculate_sasa()
+        if calculate_embeddings:
+            self.info.embeddings=self.calculate_embeddings()
+        else:
+            self.info.embeddings = None
+        self.info.seq_3di = self.get_3di()
+        self.info.chains = get_chains(self.structure)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    #TODO check for multiple chains
-    def download(self, id, source="PDB", destination=None, load_after_download=True):
-        if source == "PDB":
-            url = "http://files.rcsb.org/download/{}.pdb".format(id)
-        elif source == "AFDB":
-            url = "https://alphafold.ebi.ac.uk/files/AF-{}-F1-model_v4.pdb".format(id)
-        else:
-            raise NotImplementedError("We can only download structures from PDB or AFDB")
 
-        download = requests.get(url, stream=True)
-        download.raise_for_status()
-        with open("{}/{}.pdb".format(destination, id), "wb") as f:
-            f.write(download.content)
-
-        self.pdb = "{}/{}.pdb".format(destination, id)
-
-        if load_after_download:
-            atom_array = PDBFile.read(self.pdb).get_structure()[0](self.pdb)
-        self.structure = atom_array
-        return self
-
-    def calculate_embeddings(self, model="esm3", normalize=False):
-        if model == "esm3":
-            get_esm3_embeddings(self.pdb, normalize=normalize)
-        else:
-            raise NotImplementedError("We can only calculate embeddings from ESM3")
-
-    def calculate_sasa(self, **kwargs):
-        accessibility = sasa(self.structure, **kwargs)
-        self.sasa = accessibility
-        return self
-
-    def get_3di(self):
-        sequences, chain_starts = to_3di(self.structure)
-        self.seq_3di = sequences
-        return self
-
-    def get_sequence(self):
-        if hasattr(self, "structure"):
-            sequence = to_sequence(self.structure)
-            self.sequence = sequence
-            return sequence
-        else:
-            raise ValueError("No structure loaded")
     def align(self, other, destination):
         if self.pdb is None or other.pdb is None:
             raise ValueError("Cannot align structures without a PDB")
@@ -113,32 +85,13 @@ class Structure:
             pocket_coords = [get_pocket_dimensions(item) for item in pocket_list]
             return pocket_list, pocket_properties, pocket_coords
 
+    #TODO
     def tm_score(self, other):
         pass
 
     def write(self, fpath):
         PDBFile.write(self.pdb, fpath)
 
-
-class Complex(Structure):
-    def __init__(self, pdb=None, sequence=None):
-        super().__init__(pdb=pdb, sequence=sequence)
-        self.chains=get_chains(self.structure)
-
-    def _get_chain(self, chain_id):
-        if type(chain_id) is int:
-            chain_id = self.chains[chain_id]
-        elif type(chain_id) is str:
-            chain = self.structure[self.structure.chain_id==chain_id]
-        else:
-            raise ValueError("Chain ID must be an integer or a string representing the chain ID")
-        return chain
-
-    def get_chain_ids(self):
-        return self.chains
-
-    # TODO this needs to be implemented in way that is agnostic to the chain type if one is a protein and the other is not
-    # should not matter, should still be able to get contacts. I think it does that but needs to be tested better.
     def contacts(self, chain_id1, chain_id2, cutoff=5.0, level="atom", measure="any"):
         """
         Get contacts between two chains in the structure.
@@ -168,4 +121,12 @@ class Complex(Structure):
                                      "distance": dist})
 
         return contacts
+
+    def __repr__(self):
+        return "Structure(name={}, pdb={}, chains={})".format(self.info.name, self.info.pdb, ",".join(self.chains))
+
+    def __str__(self):
+        return self.pdb
+
+
 
