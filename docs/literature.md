@@ -23,7 +23,7 @@ The `LitSearch` class provides methods to search PubMed and arXiv databases.
 ### Usage
 
 ```python
-from ccm_benchmate.literature.literature import LitSearch
+from benchmate.literature.literature import LitSearch
 
 # Initialize searcher (optional PubMed API key)
 searcher = LitSearch(pubmed_api_key="your_api_key")  # API key optional
@@ -62,7 +62,7 @@ python `dataclass` under the paper.info attribute.
 ### Usage
 
 ```python
-from ccm_benchmate.literature.literature import Paper
+from benchmate.literature.literature import Paper
 
 # Initialize from PubMed ID
 paper = Paper(

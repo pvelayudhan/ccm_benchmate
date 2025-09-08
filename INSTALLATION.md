@@ -24,11 +24,11 @@ Here are the instructions for installation.
 git clone https://github.com/ccmbioinfo/ccm_benchmate
 
 # go into the directory
-cd ccm_benchmate
+cd benchmate
 
 #create the conde env
 conda env create -f environment.yaml #this might take a minute or 2
-conda activate ccm_benchmate
+conda activate benchmate
 
 # install the python dependencies
 pip install -r requirements.txt

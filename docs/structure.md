@@ -6,108 +6,47 @@ nav_order: 8
 
 # Structure Module
 
-A module for working with protein structures, providing functionality for structure analysis, prediction, alignment and embedding generation.
+A module for working with protein structures, providing functionality for structure analysis, prediction, alignment and embedding generation. 
+Just like the sequence module this is a very lightweight module that only is meant to represent a protein structure and have a few
+very basic calculations. Again similar to the sequence module, adding additional functionality that depends on some of the later 
+nerual network modules will not be possible and will be ported the container runner class. As long as the output of whatever
+program is running in the container is a PDB file, it will be possible to load it into this class.
 
-## Classes Overview
+Under the hood the main structure is represented using the [biotite](https://www.biotite-python.org/latest/index.html) package, which itself has 
+a lot of other functionalities that can be immediately used.
 
-- `Structure`: Main class for handling individual protein structures
-- `ProteinComplex`: Class for working with multi-chain protein structures (not yet fully implemented)
+One additional limitation of representing structures is that there can be multiple chains in a single PDB file. These chains are
+not necessarily proteins. The structure can come from NMR, X-ray, EM, or other sources rendering a lot of the information in the header
+very difficult to interpret and parse; this is assuming that the header is not weirdly formatted in the first place. 
 
-## Structure Class
+So we are keeping this module basic and only supporting loading/downloading structures, aligning two structures and 
+calculating contact points between chains. If you have other ideas that can be generalized to any structure, please let us know.
 
 ### Basic Usage
 
 ```python
-from ccm_benchmate.structure.structure import Structure
+from benchmate.structure.structure import Structure
 
 # Create from PDB file
 structure = Structure(pdb="/path/to/structure.pdb")
+# or
+structure = Structure(pdb_id="1A2B", source="pdb", destination="/path/to/download/")
 
-# Create from sequence and predict structure
-structure = Structure(
-    sequence="MKLLPRGPAAAAAAVLLLLSLLLLPQVQA",
-    predict=True,
-    model="AF3"  # Currently only AlphaFold3 supported
-)
-
-# Download structure from PDB/AlphaFold DB
-structure.download(
-    id="1ABC",           # PDB or UniProt ID
-    source="PDB",        # "PDB" or "AFDB" 
-    destination="/path/", # Output directory
-    load_after_download=True
-)
 ```
 
-### Structure Analysis
+### Structure Analysis (very limited)
 
 ```python
-# Calculate solvent accessible surface area (SASA)
+# calculate SASA (solvent accesible surface area)
 structure.calculate_sasa()
 
-# Get 3D structure embeddings
-structure.calculate_embeddings(
-    model="esm3",     # Currently only ESM3 supported
-    normalize=False
-)
+# find pockets in structure using fpocket
+stucture.find_pockets()
 
-# Get 3Di sequence encoding
-structure.get_3di()
+# aling 2 structures
+structure.align(other_structure)
 
-# Get amino acid sequence
-sequence = structure.get_sequence()
-
-# Align with another structure
-other_structure = Structure(pdb="/path/to/other.pdb")
-aligned_pdb, rotation_file, html_report = structure.align(
-    other=other_structure,
-    destination="/path/for/output/"
-)
+# find contacts between chains only applies to pdb files with 2 chains (does not have to be proteins)
+contacts=structure.find_contacts(chain_id1="A", chain_id2="B")
 ```
-
-### Structure Prediction
-
-```python
-# Predict structure using AlphaFold3
-predicted = structure.predict(
-    output_path="/path/for/output/",
-    container="af3_container",    # Container with AF3 
-    inference=True,
-    pipeline=False,
-    model="AF3"                   # Currently only AF3 supported
-)
-```
-
-### File Operations
-
-```python
-# Write structure to PDB file
-structure.write("/path/to/output.pdb")
-```
-
-## Key Features
-
-### Structure Operations
-- Load structures from PDB files
-- Download structures from PDB/AlphaFold DB
-- Structure prediction with AlphaFold3
-- Calculate SASA
-- Generate structure embeddings
-- Get 3Di sequence encoding
-- Structure alignment
-- Import/export PDB files
-
-### Supported Sources
-- PDB database
-- AlphaFold DB
-- Local PDB files
-
-### Analysis Types
-- SASA calculation
-- ESM3 structure embeddings
-- 3Di sequence encoding
-- Structure alignment with MUSTANG
-
-Currently, we are refactoring our code to run structure prediction via `ContainerRunner` class to increase the flexibility and
-remove unecessary dependencies that might cause conflicts later in development. 
 

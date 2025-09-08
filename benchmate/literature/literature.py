@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 from bs4 import BeautifulSoup as bs
 
-from ccm_benchmate.literature.utils import *
+from benchmate.literature.utils import *
 
 class NoPapersError(Exception):
     pass

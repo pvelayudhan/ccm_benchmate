@@ -7,9 +7,9 @@ import pandas as pd
 from Bio import Seq, SeqIO
 import pysam
 
-from ccm_benchmate.knowledge_base.tables import *
-from ccm_benchmate.genome.utils import insert_genome
-from ccm_benchmate.ranges.genomicranges import *
+from benchmate.knowledge_base.tables import *
+from benchmate.genome.utils import insert_genome
+from benchmate.ranges.genomicranges import *
 
 #TODO the genome class currently is not compatible with kb
 class Genome:

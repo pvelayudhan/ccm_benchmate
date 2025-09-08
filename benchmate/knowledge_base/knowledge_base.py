@@ -1,7 +1,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
-from ccm_benchmate.knowledge_base.tables import *
+from benchmate.knowledge_base.tables import *
 
 
 class KnowledgeBase:

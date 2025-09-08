@@ -1,4 +1,4 @@
-from ccm_benchmate.apis.ebi_clients.base_tool import BaseTool
+from benchmate.apis.ebi_clients.base_tool import BaseTool
 
 
 class ClustalOmega(BaseTool):

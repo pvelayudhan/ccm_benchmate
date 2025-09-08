@@ -35,10 +35,9 @@ test different options to see which one is best suited for your needs.
 
 ### Variation methods
 
-
 ```python
-from ccm_benchmate.apis.ensembl import Ensembl
-from ccm_benchmate.ranges.genomicranges import GenomicRange
+from benchmate.apis.ensembl import Ensembl
+from benchmate.ranges.genomicranges import GenomicRange
 
 ensembl = Ensembl()
 
@@ -57,10 +56,10 @@ info_translated = ensembl.variation("rs56116432", method="translate")
 ### VEP
 
 VEP is ensembls **V**ariant **E**ffect **P**redictor. You can run vep on a single variant and return **a lot** of information based on what additionaly tools you have selected to use. To be able to use the vep method you will need to use
-`ccm_benchmate.variant.variant` module. 
+`ccm_benchmate.variant.variant` module.
 
 ```python
-from ccm_benchmate.variant.variant import SequenceVariant
+from benchmate.variant.variant import SequenceVariant
 myvar= SequenceVariant(1, 55051215, 'G', 'GA')
 
 vep_info = ensembl.vep(species="human", variant=myvar, tools=None)
@@ -74,7 +73,7 @@ There are many tools that can be called with the VEP method. You can see the who
 If you are interested in what phenotypes are associated with a genomic region you can use the `GenomicRanges` module and the phenotype method:
 
 ```python
-from ccm_benchmate.ranges.genomicranges import GenomicRange
+from benchmate.ranges.genomicranges import GenomicRange
 grange = GenomicRange(9, 22125503, 22125520, "+")
 phenotypes = ensembl.phenotype(grange)
 phenotypes
@@ -112,7 +111,7 @@ interaction queires recursively. That is, you can take a protein and gather all 
 a network of arbitrary depth. Of course this will increase the number things returned exponentially and will talke exponentially longer. So keep that in mind.
 
 ```python
-from ccm_benchmate.apis.stringdb import StringDb
+from benchmate.apis.stringdb import StringDb
 stringdb=StringDb()
 
 network = stringdb.gather("human", name="ENSP00000354587", get_network=False)
@@ -129,7 +128,7 @@ Get network specifies whether you wanto get the itneractors of interactor. If yo
 Biogrid is a similar platform that focuses on protein-proteininteractions with some experimental data annotaions as to how that interaction is determined. To use biogrid you need to get an access key but it is free.
 
 ```python
-from ccm_benchmate.apis.others import BioGrid
+from benchmate.apis.others import BioGrid
 biogrid=BioGrid(access_key="<your api key>")
 
 interactions=biogrid.interactions(gene_list=["ENSP00000354587"]) # you can provide more than one gene
@@ -146,7 +145,7 @@ biogrid.organisms
 Intact is one other interaction database. There were a lot of requests to include all of these in the package, While they provide similar information they do have different use cases.
 
 ```python
-from ccm_benchmate.apis.others import IntAct
+from benchmate.apis.others import IntAct
 intact=IntAct(page_size=100)
 
 # to search intact you need the ebi id, this you can get from ensembl.xrefs or from uniprot (see below)
@@ -160,10 +159,10 @@ Intact database contains information not just about protein-protein interactions
 
 ## ncbi.Ncbi
 
-This probabaly is the thinnest wrapper around all the apis. The main reason for that is that we cover basically the entrirety of the ncbi database and you have a lot of options and flexibility for querying. As always with that flexibility comes the burden of verbosity. We will cover some of the enpoints in this tutorial for the rest you can check the eutils guide and the ncbi website. One other quirk of this database is, some enpoints return detailed information via the summary endpoint while others return via fetch. You will need to try them out yourself before writing a comprehensive script. 
+This probabaly is the thinnest wrapper around all the apis. The main reason for that is that we cover basically the entrirety of the ncbi database and you have a lot of options and flexibility for querying. As always with that flexibility comes the burden of verbosity. We will cover some of the enpoints in this tutorial for the rest you can check the eutils guide and the ncbi website. One other quirk of this database is, some enpoints return detailed information via the summary endpoint while others return via fetch. You will need to try them out yourself before writing a comprehensive script.
 
 ```python
-from ccm_benchmate.apis.ncbi import Ncbi
+from benchmate.apis.ncbi import Ncbi
 ncbi = Ncbi(email=<your email>) # so ncbi can tell you to stop abusing their resources. Also the rate limit increase dramatically when an email or api key is provided, they put you in the nice queue.
 
 # list all the databases:
@@ -195,7 +194,7 @@ I'm not going to go into a lot of details partly because there are so many diffe
 Uniprot is an extensive database of proteins and features of proteins, It has several api endpoinst, the ones that are integrated are the most compreshenive ones called: proteins, mutagensis (high throughput mutagenesis experiments), isoforms and variation. You can query this using a single command like so:
 
 ```python
-from ccm_benchmate.apis.uniprot import UniProt
+from benchmate.apis.uniprot import UniProt
 uniprot=UniProt()
 
 results=uniprot.search_uniprot(uniprot_id="P01308", get_isoforms=True, get_variations=True,
@@ -227,7 +226,7 @@ uniprot.get_comments(results["json"], "DISEASE")
 Reactome is more concerned about biological reactions, pathways and the genes/proteins that are associated with it. You need ot know your reactome id but I think we can figure that out either through ensembl or uniprot.
 
 ```python
-from ccm_benchmate.apis.reactome import Reactome
+from benchmate.apis.reactome import Reactome
 reactome=Reactome()
 
 # initialization gathers some information that is up to date, these are the fields you can search for
@@ -262,7 +261,7 @@ Each of the details has more information that are also stored as dictionaries. T
 Last but not least we have RNA Central, you will need the rna central id to query, you can get most of these through ensembl xrefs
 
 ```python
-from ccm_benchmate.apis.rnacentral import RnaCentral
+from benchmate.apis.rnacentral import RnaCentral
 
 #you need the rnacentral id to search
 rnacentral=RnaCentral()

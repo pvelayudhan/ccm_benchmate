@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-from ccm_benchmate.utils.general_utils import *
+from benchmate.utils.general_utils import *
 
 
 class UniProt:

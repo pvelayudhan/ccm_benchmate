@@ -15,7 +15,7 @@ usearch-molecule packages.
 ## Usage
 
 ```python
-from ccm_benchmate.molecule.molecule import Molecule
+from benchmate.molecule.molecule import Molecule
 
 smiles="C1=CC=CC=C1"  # Benzene
 molecule = Molecule(smiles)

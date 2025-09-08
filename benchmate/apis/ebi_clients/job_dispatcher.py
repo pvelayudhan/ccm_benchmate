@@ -1,5 +1,5 @@
-from ccm_benchmate.apis.ebi_clients.base_tool import Dbfetch
-from ccm_benchmate.apis.ebi_clients.tools import (
+from benchmate.apis.ebi_clients.base_tool import Dbfetch
+from benchmate.apis.ebi_clients.tools import (
     ClustalOmega,
     EMBOSS_Pepinfo,
     EMBOSS_Backtranseq,
@@ -10,7 +10,7 @@ from ccm_benchmate.apis.ebi_clients.tools import (
     TCoffee,
     Wise
 )
-from ccm_benchmate.apis.ebi_clients.utils import poll_job, retrieve_job_results
+from benchmate.apis.ebi_clients.utils import poll_job, retrieve_job_results
 
 
 class JobDispatcher:

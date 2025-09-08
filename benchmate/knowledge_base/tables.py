@@ -232,12 +232,6 @@ class Sequence(Base):
     embeddings=Column(Vector)
     features=Column(JSONB)
 
-class SequenceList(Base):
-    __tablename__ = 'sequence_list'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey('project.id'))
-    sequence=Column(ForeignKey('sequence.id'))
-
 # structure tables
 class Structure(Base):
     __tablename__="structure"

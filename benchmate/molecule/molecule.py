@@ -5,7 +5,7 @@ from rdkit import Chem
 import numpy as np
 from usearch_molecules.dataset import FingerprintedDataset, shape_ecfp4, shape_fcfp4, shape_maccs
 
-from ccm_benchmate.structure.structure import Structure
+from benchmate.structure.structure import Structure
 
 @dataclass
 class MoleculeInfo:

@@ -14,8 +14,8 @@ from qwen_vl_utils import process_vision_info
 from chonkie import SemanticChunker, Model2VecEmbeddings
 from colpali_engine.models import ColPali, ColPaliProcessor
 
-from ccm_benchmate.literature.configs import *
-from ccm_benchmate.utils.general_utils import *
+from benchmate.literature.configs import *
+from benchmate.utils.general_utils import *
 
 # set up semantic chunker so I don't have to do it every time
 params=paper_processing_config["chunking"]

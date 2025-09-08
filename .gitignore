@@ -5,9 +5,9 @@
 *.sif
 *.idea
 *__pycache__
-ccm_benchmate/sequence/databases
-ccm_benchmate/literature/models
-ccm_benchmate/containers
+benchmate/sequence/databases
+benchmate/literature/models
+benchmate/containers
 notebooks
 *.egg-info
 *.egg

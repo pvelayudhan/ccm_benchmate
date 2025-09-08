@@ -4,14 +4,14 @@ import io
 from sqlalchemy import select, insert
 from PIL import Image
 
-from ccm_benchmate.apis.utils import ApiCall, Apis
-from ccm_benchmate.genome.genome import Genome
-from ccm_benchmate.literature.literature import Paper, LitSearch, PaperInfo
-from ccm_benchmate.molecule.molecule import Molecule
+from benchmate.apis.utils import ApiCall, Apis
+from benchmate.genome.genome import Genome
+from benchmate.literature.literature import Paper, LitSearch, PaperInfo
+from benchmate.molecule.molecule import Molecule
 
 #TODO add and get
-from ccm_benchmate.sequence.sequence import Sequence, SequenceList, SequenceDict
-from ccm_benchmate.structure.structure import Structure, Complex
+from benchmate.sequence.sequence import Sequence, SequenceList, SequenceDict
+from benchmate.structure.structure import Structure, Complex
 
 
 class ProjectNameError(Exception):
@@ -128,9 +128,6 @@ def add_papers(project, papers: List[Paper]):
 
     return None
 
-#def add_sequences(project, sequences):
-#    pass
-
 #def add_structures(project, structures):
 #    pass
 
@@ -201,7 +198,32 @@ def add_molecules(project, molecules):
 
     return None
 
+def add_structures(project, structures):
+    structure_table=project.kb.db_tables["structure"]
+    for item in structures:
+        if not isinstance(item, Structure):
+            raise ValueError("All items in the structures list must be of type Structure")
+        str_stms=insert(structure_table.c.project_id, structure_table.c.name, )
 
+def add_sequence(project, sequences):
+    sequence_table=project.kb.db_tables["sequence"]
+    for item in sequences:
+        if not isinstance(item, Sequence):
+            raise ValueError("All items in the sequences list must be of type Sequence")
+
+        seq_stms=insert(sequence_table.c.project_id, sequence_table.c.name, sequence_table.c.sequence, sequence_table.c.type,
+                    sequence_table.c.features, sequence_table.c.msa_path, sequence_table.c.blast_path, sequence_table.c.embeddings).values(
+            project.project_id,
+            item.name,
+            item.sequence,
+            item.type,
+            item.features,
+            item.msa_path,
+            item.blast_path,
+            item.embeddings
+        )
+        project.kb.session().execute(seq_stms)
+        project.kb.session().commit()
 
 def get_paper(description, papers):
     pass
