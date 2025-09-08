@@ -8,7 +8,7 @@ from typing import Dict, Optional
 from Bio import Seq, SeqIO
 import numpy as np
 
-from ccm_benchmate.sequence.utils import *
+from benchmate.sequence.utils import *
 
 class NoSequenceError(Exception):
     """
@@ -24,6 +24,8 @@ class SequenceInfo:
     type:str
     features:Optional[Dict]=None
     embeddings:Optional[np.ndarray]=None
+    msa_path:Optional[str]=None
+    blast_path:Optional[str]=None
 
 
 #TODO features, what could this be?
