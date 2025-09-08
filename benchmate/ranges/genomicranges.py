@@ -1,5 +1,5 @@
 
-from ccm_benchmate.ranges.ranges import Range, RangesList
+from benchmate.ranges.ranges import Range, RangesList
 
 
 class GenomicRange:

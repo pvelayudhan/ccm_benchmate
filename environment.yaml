@@ -1,4 +1,4 @@
-name: ccm_benchmate
+name: benchmate
 channels:
   - bioconda
   - conda-forge

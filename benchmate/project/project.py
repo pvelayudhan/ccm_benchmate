@@ -1,7 +1,7 @@
 
-from ccm_benchmate.knowledge_base.knowledge_base import KnowledgeBase
+from benchmate.knowledge_base.knowledge_base import KnowledgeBase
 
-from ccm_benchmate.project.utils import *
+from benchmate.project.utils import *
 
 
 class Literature:
@@ -69,15 +69,19 @@ class Project:
         """
         for item in items:
             if isinstance(item, Paper):
-                add_papers([item])
+                add_papers(self, [item])
             elif isinstance(item, ApiCall):
-                add_api_calls([item])
+                add_api_calls(self, [item])
             elif isinstance(item, Molecule):
-                add_molecules([item])
+                add_molecules(self, [item])
             elif isinstance(item, Genome):
-                add_genome(item.genome_fasta, item.gtf, item.name, item.description)
+                add_genome(self, item.genome_fasta, item.gtf, item.name, item.description)
+            elif isinstance(item, Sequence):
+                add_sequence(self, [item])
+            elif isinstance(item, Structure) or isinstance(item, Complex):
+                add_structures(self, [item])
             else:
-                raise NotImplementedError("Items must be of type Paper, ApiCall, Molecule or Genome")
+                raise NotImplementedError("Items must be of type Paper, ApiCall, Molecule, Sequence, Structure, Variant or Genome")
 
     def from_kb(self, project_id, id, id_type):
         """
