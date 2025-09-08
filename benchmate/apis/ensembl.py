@@ -4,8 +4,8 @@ import pandas as pd
 import requests
 import json
 
-from ccm_benchmate.ranges.genomicranges import GenomicRange
-from ccm_benchmate.variant.variant import *
+from benchmate.ranges.genomicranges import GenomicRange
+from benchmate.variant.variant import *
 
 #I'm skipping the genome stuff because we have the genome class that will get the genome build the db etc.
 # this is also the whole point of genomic ranges classes, that we can do these calculations locally, I do not think

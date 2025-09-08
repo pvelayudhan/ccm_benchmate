@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from ccm_benchmate.apis.ensembl import Ensembl
-from ccm_benchmate.apis.ncbi import Ncbi
-from ccm_benchmate.apis.reactome import Reactome
-from ccm_benchmate.apis.uniprot import UniProt
-from ccm_benchmate.apis.stringdb import StringDb
-from ccm_benchmate.apis.rnacentral import RnaCentral
-from ccm_benchmate.apis.others import BioGrid, IntAct
+from benchmate.apis.ensembl import Ensembl
+from benchmate.apis.ncbi import Ncbi
+from benchmate.apis.reactome import Reactome
+from benchmate.apis.uniprot import UniProt
+from benchmate.apis.stringdb import StringDb
+from benchmate.apis.rnacentral import RnaCentral
+from benchmate.apis.others import BioGrid, IntAct
 
 @dataclass
 class ApiCall:
