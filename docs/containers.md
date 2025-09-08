@@ -22,7 +22,7 @@ The `ContainerRunner` class provides a unified interface for:
 ### Basic Local Container Execution
 
 ```python
-from ccm_benchmate.container_runner.container_runner import ContainerRunner
+from benchmate.container_runner.container_runner import ContainerRunner
 
 # Initialize with container path
 runner = ContainerRunner(

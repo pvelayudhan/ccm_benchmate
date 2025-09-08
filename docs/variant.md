@@ -23,8 +23,9 @@ store them in the knowledegbase database.
 Base class for all variant types. Stores core attributes such as chromosome, position, filter status, ID, and annotations.
 
 **Public Methods & Usage:**
+
 ```python
-from ccm_benchmate.variant.variant import BaseVariant
+from benchmate.variant.variant import BaseVariant
 
 # Create a base variant
 variant = BaseVariant(chrom="1", pos=12345, filter="PASS")
@@ -44,8 +45,9 @@ impact = variant.query_annotation("impact")
 Represents SNV and indel variants. Extends `BaseVariant` with reference/alternate alleles and sample/callset-specific fields.
 
 **Public Methods & Usage:**
+
 ```python
-from ccm_benchmate.variant.variant import SequenceVariant
+from benchmate.variant.variant import SequenceVariant
 
 # Create a sequence variant
 seq_var = SequenceVariant(
@@ -65,8 +67,9 @@ gene = seq_var.query_annotation("gene")
 Represents structural variants (e.g., INS, DEL, INV, DUP, BND, CNV). Extends `BaseVariant` with SV-specific fields.
 
 **Public Methods & Usage:**
+
 ```python
-from ccm_benchmate.variant.variant import StructuralVariant
+from benchmate.variant.variant import StructuralVariant
 
 # Create a structural variant
 sv = StructuralVariant(
@@ -86,8 +89,9 @@ significance = sv.query_annotation("clinical_significance")
 Represents tandem repeat variants, including repeat motif, allele length, and sample-specific metrics.
 
 **Public Methods & Usage:**
+
 ```python
-from ccm_benchmate.variant.variant import TandemRepeatVariant
+from benchmate.variant.variant import TandemRepeatVariant
 
 # Create a tandem repeat variant
 tr = TandemRepeatVariant(
@@ -101,11 +105,11 @@ is_expanded = tr.query_annotation("repeat_expansion")
 
 You can convert these variants to HGVS format using the `to_hgvs` method:
 
-While you can use this function on its own for your own, it is also useful to be used in the api.ensemble.Ensembl.vep method among others. 
+While you can use this function on its own for your own, it is also useful to be used in the api.ensemble.Ensembl.vep method among others.
 
 ```python
-from ccm_benchmate.variant.variant import SequenceVariant
-from ccm_benchmate.variant.utils import to_hgvs
+from benchmate.variant.variant import SequenceVariant
+from benchmate.variant.utils import to_hgvs
 # Convert to HGVS format
 
 seq_var = SequenceVariant(

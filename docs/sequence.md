@@ -6,22 +6,22 @@ nav_order: 7
 
 # Sequence Module
 
-A module for working with biological sequences, providing sequence analysis, alignment, and embedding capabilities.
+A module for working with biological sequences, providing sequence analysis, alignment, and embedding capabilities. Currenlty, 
+the functionalities are limited to but are expanding. 
 
-## Classes Overview
+We are trying to make the sequence methodologies as type agnostic as possible, and this puts a limitation on the 
+functionalities that can be provided.
 
-- `Sequence`: Base class for working with sequences
-- `SequenceList`: Class for working with collections of sequences (not yet fully implemented)
 
 ## Sequence
 
 The main class for working with individual sequences, providing methods for sequence analysis, mutation, 
-alignment and searching.
+alignment and searching. Simi
 
 ### Basic Usage
 
 ```python
-from ccm_benchmate.sequence.sequence import Sequence
+from benchmate.sequence.sequence import Sequence
 
 # Create a sequence object
 seq = Sequence(name="my_sequence", sequence="MKLLPRGPAAAAAAVLLLLSLLLLPQVQA")
@@ -71,25 +71,11 @@ results = seq.blast(
 seq.write("/path/to/output.fasta")
 ```
 
-## Key Features
+## Future directions:
 
-### Sequence Operations
-- Sequence manipulation and mutation
-- Generate sequence embeddings using ESM models
-- Multiple sequence alignment using MMseqs2
-- BLAST searching through NCBI API
+We are working on adding more functionalities to this module. While it is tempting to add a lot of stuff using some of the 
+latest deeplearning models and predict a bunch of things about a sequence that is well beyond the scope of this module and 
+will also cause the number of dependencies to explode. We are trying to keep this module light and focused on the core functionalities.
 
-### Supported Models for Embeddings
-- ESMC 300M
-- ESMC 600M
-
-### File Formats
-- FASTA input/output
-- A3M format for MSA output
-
-## Notes
-
-- Embeddings require GPU support (falls back to CPU if unavailable)
-- MMseqs2 must be installed for MSA functionality (Will move `ContainerRunner`)
-- BLAST searches use NCBI's web API
-
+For other predictions or advanced tasks we are aiming to use the [containers](containers.md) module. This will allow us and you
+to use whatever method and model you want and then re-create a Sequence object with the results. 

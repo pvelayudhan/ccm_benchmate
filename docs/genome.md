@@ -25,7 +25,7 @@ it will create a new genome. This will happen if the database does not have geno
 the same name, it will return a value error since we do not have way of knowing which one to use.
 
 ```python
-from ccm_benchmate.genome.genome import Genome
+from benchmate.genome.genome import Genome
 
 # Create a genome object with required files
 genome = Genome(
@@ -42,7 +42,7 @@ genome = Genome(
 The module supports querying different types of genomic features:
 
 ```python
-from ccm_benchmate.ranges.genomicranges import GenomicRange
+from benchmate.ranges.genomicranges import GenomicRange
 
 # Query genes by ID
 genes = genome.genes(ids=["ENSG00000139618"])
