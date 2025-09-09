@@ -24,7 +24,7 @@ Here are the instructions for installation.
 git clone https://github.com/ccmbioinfo/ccm_benchmate
 
 # go into the directory
-cd benchmate
+cd ccm_benchmate
 
 #create the conde env
 conda env create -f environment.yaml #this might take a minute or 2
