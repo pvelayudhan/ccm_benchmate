@@ -7,14 +7,14 @@
 We are so glad that you want to contribute to our project! Here are some guidelines to help you get started:
 
 We are using git for version control, if you are familiar with git feel free to skip this section. The first thing you will
-need is a github account. If you don't have one, you can create one at [github.com](github.com). After that you can fork the
+need is a GitHub account. If you don't have one, you can create one at [github.com](github.com). After that you can fork the
 repository by clicking the "Fork" button in the top right corner of the repository page. This will create a copy of the repository in your own account.
 
-Here are some basic git instuctions:
+Here are some basic git instructions:
 
 ## Creating a local git repo
 
-Github is built on top of git. Git is a popular code version control system that tracks your edits to files and whether
+GitHub is built on top of git. Git is a popular code version control system that tracks your edits to files and whether
 new files are added or old ones are deleted. To create a git repository in a directory of your choosing
 
 ```bash
@@ -114,7 +114,7 @@ you will need to create a module called tables.py and that will contain the SQLA
 populate the tables in the database. Some of the modules already have this files, so feel free to use them as a reference.
 
 If you are not familiar with SQLAlchemy, please take a look at the [SQLAlchemy documentation](https://docs.sqlalchemy.org/en/14/orm/tutorial.html) and
-if you have any questions about how to sructure your data in a way that it can be stored in a normalized SQL database, see
+if you have any questions about how to structure your data in a way that it can be stored in a normalized SQL database, see
 [here](https://www.datacamp.com/tutorial/normalization-in-sql) for reference and you can always reach out to us via issues.
 
 There is no limit to how many modules you can create but one helpful rule I find is to focus on the task not on the
@@ -233,7 +233,7 @@ argument in the callable script.
 
 ### Push guides
 
-As long as you are following the guidelines above you can push to your branches as much as you want. Github tracks
+As long as you are following the guidelines above you can push to your branches as much as you want. GitHub tracks
 your git repo so if you have done multiple commits a single push will show up as multiple commits on the remote repo
 as well.
 

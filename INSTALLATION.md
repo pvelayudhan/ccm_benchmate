@@ -11,7 +11,7 @@ we add more functionalities and move some of them to the `ContainerRunner` modul
 ## Installing Conda
 
 This one is fairly straightforward, you can follow the instructions [here]() after running the installation script you should
-be able to activate/deactivate conda environments. If you are installing this under HPC, I suggest that you move the locaiton
+be able to activate/deactivate conda environments. If you are installing this under HPC, I suggest that you move the location
 of your conda cache to a different location. You can do that by following the instructions [here](), the other option
 is that you can create a [symbolic link]() to your `.cache`, `.singularity` and `.conda` folders in your `~` where the actual
 folders are in a partition with more storage. 
@@ -36,13 +36,11 @@ pip install -r requirements.txt
 pip install . 
 ```
 
-
-
 This will create the conda environment and install all the dependencies. There are a few things to keep in mind which are 
 not included in this package yet and there are some gotchas:
 
 1. MMSEQS requires AVX512 instruction sets. If you have a new-ish personal computer, that should be fine. It might not run on 
-apple silicon, I have not tested that. Additionally, some of the older cpus on HPC do not support this. You will need to 
+apple silicon, I have not tested that. Additionally, some of the older CPUs on HPC do not support this. You will need to 
 create a job where you specify this constraint by including `-constraint=avx512`
 
 2. Singularity is not included in this package, however, there is an instance of singularity and another one of apptainer
