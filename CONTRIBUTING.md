@@ -7,7 +7,7 @@
 We are so glad that you want to contribute to our project! Here are some guidelines to help you get started:
 
 We are using git for version control, if you are familiar with git feel free to skip this section. The first thing you will
-need is a github account. If you don't have one, you can create one at [github.com](github.com). After that you can fork the 
+need is a github account. If you don't have one, you can create one at [github.com](github.com). After that you can fork the
 repository by clicking the "Fork" button in the top right corner of the repository page. This will create a copy of the repository in your own account.
 
 Here are some basic git instuctions:
@@ -15,7 +15,7 @@ Here are some basic git instuctions:
 ## Creating a local git repo
 
 Github is built on top of git. Git is a popular code version control system that tracks your edits to files and whether
-new files are added or old ones are delelted. To create a git repository in a directory of your choosing
+new files are added or old ones are deleted. To create a git repository in a directory of your choosing
 
 ```bash
 cd mydirectory
@@ -69,10 +69,10 @@ and you can push using
 git push -u origin <branch name>
 ```
 
-Please create a `.gitignore` file to keep the unwanted from being added and commited to the repository. You can also use the 
-exisiting file and make changes as you see fit. 
+Please create a `.gitignore` file to keep the unwanted from being added and committed to the repository. You can also use the
+existing file and make changes as you see fit.
 
-### Commiting guidelines
+### Committing guidelines
 
 Please make sure to write clear and concise commit messages. A good commit message should explain what changes were made and why.
 Do not try to make multiple unrelated changes in a single commit. Instead, break them down into smaller, logical commits, this not only
@@ -83,21 +83,21 @@ allow us to review and merge them independently, making the process smoother and
 ### Branching guidelines
 
 When you are working on a new feature or bug fix, please create a new branch for your changes. This will help keep the main branch clean and will also
-avoid conflicts with other contributors. 
+avoid conflicts with other contributors.
 
 ## Code Style
 
 As you can tell this is mainly a Python project, so please follow the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code.
-To make everyone's life easier we are going to keep a very relaxed style guide. We are not going to enforce any specific line length, or any specific 
+To make everyone's life easier we are going to keep a very relaxed style guide. We are not going to enforce any specific line length, or any specific
 indentation style. We do however ask that you use spaces instead of tabs for indentation, and that you use 4 spaces for each level of indentation.
 
-Find a clear but short name for your task obviously `myawesomecode` is not an appropritae name for a folder or python
+Find a clear but short name for your task obviously `myawesomecode` is not an appropriate name for a folder or python
 code but neither is `scibertsummarizerforclinicalnotesbasedonpreviouscomments`. Something like `summarizer` is a much
 better choice. While naming folders and files try and be as explicit as possible so if your code does not summarize but
 select sections of notes `section_selector` might be more suitable.
 
 Within each folder there should be at least one python module with the same name, this module will contain the main code
-that does the task. This does not mean that it will contain **all** the code related to the task. Have a clear separtion
+that does the task. This does not mean that it will contain **all** the code related to the task. Have a clear separation
 of different kinds of things each module does and try to contain each of these in their respective module. You can
 make this as a CLI script that is callable with arguments (see below) or you can choose to include another file
 (this can be python or bash -let's keep things standard, if you use bash please set `-oe pipefail`).
@@ -107,14 +107,14 @@ that are helper functions and classes but do not perform the main task. For exam
 tab (`\t`) and converts them to new lines (`\n`) will be in the utils.
 
 If this module is going to be part of the knowledge base and will be used by other modules, please make sure that you describe
-in detail how it works and what it does in the `README.md` file. 
+in detail how it works and what it does in the `README.md` file.
 
 Additionally you will need to structure your data in a way that it can be stored in a normalized SQL database. This means that
 you will need to create a module called tables.py and that will contain the SQLAlchemy models that will be used to generate and
 populate the tables in the database. Some of the modules already have this files, so feel free to use them as a reference.
 
 If you are not familiar with SQLAlchemy, please take a look at the [SQLAlchemy documentation](https://docs.sqlalchemy.org/en/14/orm/tutorial.html) and
-if you have any questions about how to sructure your data in a way that it can be stored in a normalized SQL database, see 
+if you have any questions about how to sructure your data in a way that it can be stored in a normalized SQL database, see
 [here](https://www.datacamp.com/tutorial/normalization-in-sql) for reference and you can always reach out to us via issues.
 
 There is no limit to how many modules you can create but one helpful rule I find is to focus on the task not on the
@@ -130,7 +130,7 @@ document will include:
 + detailed description of modules
 + usage instructions for main classes and functions
 
-If you are using conda you can choose to inlcude an `enviroment.yaml`. Please use these names in and not something else
+If you are using conda you can choose to include an `enviroment.yaml`. Please use these names in and not something else
 to make sure that we are all in the same page.
 
 ## Code style
@@ -188,8 +188,8 @@ that's ok too but with complexity comes side effects and convoluted code. If you
 features please feel free to reach out and we can discuss if we can have a simpler architecture.
 
 If you like using type hints please do so, but do not feel obligated to use them. If you do use them please make sure that
-the types are correct and that they are used consistently throughout the codebase. Whenever applicaple at least describe
-what types are expected for the inputs and outputs of the functions within the docstring. 
+the types are correct and that they are used consistently throughout the codebase. Whenever applicable at least describe
+what types are expected for the inputs and outputs of the functions within the docstring.
 
 
 ### Lazy vs Eager eval
@@ -224,7 +224,7 @@ VM (not a big deal it just would take a bit for me to reset and everyone will be
 ### Arguments and settings
 
 For simple CLI arguments use the `argparse` module. This is an extremely flexible module and you can have subparsers
-for different modes of analysis. Please do not use a 3rd parth module like `click`. There is no need to increase the
+for different modes of analysis. Please do not use a 3rd party module like `click`. There is no need to increase the
 number of dependencies.
 
 If your code requires extensive parameters (it might for experimentation) you can have a `json` or a `yaml` file to
@@ -241,27 +241,27 @@ as well.
 
 If you want to contribute to someone else's code please create a pull request unless you are actively working with
 that person. The tagged person will then review the code and will approve or edit as they see fit. Save for the
-simplest of taskt please keep the discussion within the issues section so we all know what's going on.
+simplest of tasks please keep the discussion within the issues section so we all know what's going on.
 
 I'm excited to work with you all on this project and sorry for the wall of text. I hope this was not all boring for
-you and it will be a good learning experience for all of us. Please let me know if you run into git issues and need 
-some config help. 
+you and it will be a good learning experience for all of us. Please let me know if you run into git issues and need
+some config help.
 
 ## Docker/singularity containers
 
-If you are using docker or singularity containers please make sure that you have a `Dockerfile` or a `Singularity` file. 
+If you are using docker or singularity containers please make sure that you have a `Dockerfile` or a `Singularity` file.
 Additionally your containers not only should have all the dependencies installed but also should be able to run using the code
-and files that are inside the container. This means that if you are using any kind of AI models you should download and inlcude the
-model weights within the container. While this will make the container larger it will also make it easier to use for other people. 
+and files that are inside the container. This means that if you are using any kind of AI models you should download and include the
+model weights within the container. While this will make the container larger it will also make it easier to use for other people.
 
 For each container please include a `README.md` file that describes how to build and run the container. This should include:
 
 + How the container can be built (as simple as Dockerfile will be enough)
 + Which command(s) to use to run the container
 
-Avoid including complicated pipelines inside the container. It is possible to generate a pipline using a series of contianers
+Avoid including complicated pipelines inside the container. It is possible to generate a pipeline using a series of containers
 this will also make it easier to use/maintain and modularize. For simple things like running multiple QC metrics for an RNA-Seq
 pipeline you can use a single container that has all the dependencies installed.
 
-If you are generating a pipeline using multiple containers please include a `README.md` file that describes how to use the pipeline. 
-Use WDL or Snakemake to generate the pipeline. Your rules should clearly state which containers map to which rules. 
+If you are generating a pipeline using multiple containers please include a `README.md` file that describes how to use the pipeline.
+Use WDL or Snakemake to generate the pipeline. Your rules should clearly state which containers map to which rules.
